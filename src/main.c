@@ -16,7 +16,7 @@ float perspectiveMatrix[4][4];
 
 // Initialize the perspective matrix to use in Clip Space Transformation.
 void UpdatePerspectiveMatrix() {
-    float fov = 40.0 * PI / 180.0; // Convert fov from degrees to radians
+    float fov = 40.0 * PI / 180.0;
     float aspect = (float)width / height;
 
     float fy = 1.0 / tan(fov / 2.0);
@@ -172,9 +172,9 @@ void CalculateBoundingBox(WindowCoords wc[3], BoundingBox *bb) {
     maxY = max(wc[0].y, wc[1].y, wc[2].y);
 
     bb->x1 = clamp(minX, width, 0);
-    bb->x2 = clamp(maxX, width, 0);;
-    bb->y1 = clamp(minY, height, 0);;
-    bb->y2 = clamp(maxY, height, 0);;
+    bb->x2 = clamp(maxX, width, 0);
+    bb->y1 = clamp(minY, height, 0);
+    bb->y2 = clamp(maxY, height, 0);
 }
 
 // Scan convert a triangle (3 window coordinates -> 1 triangle).
@@ -184,10 +184,10 @@ int ScanConversion(WindowCoords *wc, Fragment *frags, BoundingBox *bb, Cell *cel
     WindowCoords wc3 = wc[2];
 
     int count = 0;
+    float det = ((wc2.y-wc3.y)*(wc1.x-wc3.x)+(wc3.x-wc2.x)*(wc1.y-wc3.y));
+    
     for (int x = bb->x1; x < bb->x2; x++) {
         for (int y = bb->y1; y < bb->y2; y++) {
-            float det = ((wc2.y-wc3.y)*(wc1.x-wc3.x)+(wc3.x-wc2.x)*(wc1.y-wc3.y));
-
             float lambda1 = (
                 ((wc2.y-wc3.y)*(x-wc3.x)+(wc3.x-wc2.x)*(y-wc3.y)) / det
             );
