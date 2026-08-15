@@ -1,6 +1,7 @@
 #include "../include/matrix-math.h"
 #include "../include/term.h"
 #include "../include/scene-loader.h"
+#include <math.h>
 
 struct termios original;
 
@@ -174,12 +175,11 @@ void CalculateBoundingBox(WindowCoords wc[3], BoundingBox *bb) {
 }
 
 // Scan convert a triangle (3 window coordinates -> 1 triangle).
-int ScanConversion(WindowCoords *wc, Fragment *frags, BoundingBox *bb, Cell *cells) {
+void ScanConversion(WindowCoords *wc, BoundingBox *bb, float *depthBuffer, TextBuffer *buf) {
     WindowCoords wc1 = wc[0];
     WindowCoords wc2 = wc[1];
     WindowCoords wc3 = wc[2];
 
-    int count = 0;
     float det = ((wc2.y-wc3.y)*(wc1.x-wc3.x)+(wc3.x-wc2.x)*(wc1.y-wc3.y));
     
     for (int x = bb->x1; x < bb->x2; x++) {
@@ -194,59 +194,38 @@ int ScanConversion(WindowCoords *wc, Fragment *frags, BoundingBox *bb, Cell *cel
                 1 - lambda1 - lambda2
             );
 
-            if (lambda1 >= 0 && lambda2 >= 0 && lambda3 >= 0) {
-                // Check if rendering in wireframe mode
-                if (wireframeMode == 0) {
-                    // Render normally
-                    float depth = wc1.z * lambda1 + wc2.z * lambda2 + wc3.z * lambda3;
-                    if (depth < cells[x + (y * width)].currentDepth) {
-                        frags[count] = (Fragment){
-                            x,
-                            y,
-                            depth,
-                        };
-                        count++;
-                        cells[x + (y * width)].currentDepth = depth;
-                    }
-                }
-                else if (lambda1 <= 0.05 || lambda2 <= 0.05 || lambda3 <= 0.05) {
-                    // Render in wireframe mode
-                    float depth = wc1.z * lambda1 + wc2.z * lambda2 + wc3.z * lambda3;
-                    if (depth < cells[x + (y * width)].currentDepth) {
-                        frags[count] = (Fragment){
-                            x,
-                            y,
-                            depth,
-                        };
-                        count++;
-                        cells[x + (y * width)].currentDepth = depth;
-                    }
-                }
+            if (!(lambda1 >= 0 && lambda2 >= 0 && lambda3 >= 0)) {
+                continue;
             }
 
+            float depth = wc1.z * lambda1 + wc2.z * lambda2 + wc3.z * lambda3;
+
+            if (wireframeMode == 0) {
+                if (depth < depthBuffer[x + (y * width)]) {
+                    AddToBuffer(buf, x, y, '@');
+                    depthBuffer[x + (y * width)] = depth;
+                }
+            }
+            else if (lambda1 <= 0.05 || lambda2 <= 0.05 || lambda3 <= 0.05) {
+                if (depth < depthBuffer[x + (y * width)]) {
+                    AddToBuffer(buf, x, y, '@');
+                    depthBuffer[x + (y * width)] = depth;
+                }
+            }
         }
-    }
-
-    return count;
-}
-
-// Write each fragment to the screen with the custom term.h terminal renderer.
-void FragmentWriting(Fragment *frags, TextBuffer *buf, int count) {
-    for (int f = 0; f < count; f++) {
-        AddToBuffer(buf, frags[f].x, frags[f].y, '@');
     }
 }
 
 // Initialize every cell with a depth of -4.0
-void ClearDepthBuffer(Cell *cells) {
+void ClearDepthBuffer(float *buffer) {
     for (int x = 0; x < width; x++) {
         for (int y = 0; y < height; y++) {
-            cells[x + (y * width)].currentDepth = 1.1;
+            buffer[x + (y * width)] = 1.1;
         }
     }
 }
 
-void RenderTriangle(Triangle *triangle, Object *obj, Camera *cam, Cell *screenCells, TextBuffer *buffer, Fragment *frags) {
+void RenderTriangle(Triangle *triangle, Object *obj, Camera *cam, float *depthBuffer, TextBuffer *buffer) {
     ClipCoords c0 = ClipSpaceTransform(ViewTransfrom(LocalTransform(triangle->vertices[0], *obj), *cam));
     ClipCoords c1 = ClipSpaceTransform(ViewTransfrom(LocalTransform(triangle->vertices[1], *obj), *cam));
     ClipCoords c2 = ClipSpaceTransform(ViewTransfrom(LocalTransform(triangle->vertices[2], *obj), *cam));
@@ -263,8 +242,7 @@ void RenderTriangle(Triangle *triangle, Object *obj, Camera *cam, Cell *screenCe
     finalWC[2] = WindowTransformation(NormalizeDeviceCoordinates(c2));
 
     CalculateBoundingBox(finalWC, &box);
-    int count = ScanConversion(finalWC, frags, &box, screenCells);
-    FragmentWriting(frags, buffer, count);
+    ScanConversion(finalWC, &box, depthBuffer, buffer);
 }
 
 int main(int argc, char *argv[]) {
@@ -290,11 +268,10 @@ int main(int argc, char *argv[]) {
         height,
     };
 
-    Cell *screenCells = malloc(width * height * sizeof(Cell));
+    float *depthBuffer = malloc(width * height * sizeof(float));
 
     WindowCoords finalWC[3];
     BoundingBox box;
-    Fragment *frags = malloc(width * height * sizeof(Fragment));
 
     // Setup camera
     Camera cam = { 
@@ -314,23 +291,21 @@ int main(int argc, char *argv[]) {
 
             UpdatePerspectiveMatrix();
 
-            screenCells = realloc(screenCells, width * height * sizeof(Cell));
+            depthBuffer = realloc(depthBuffer, width * height * sizeof(float));
 
             buffer.data = realloc(buffer.data, width * height * sizeof(char));
             buffer.width = width;
             buffer.height = height;
-
-            frags = realloc(frags, width * height * sizeof(Fragment));
         }
 
         // Clear text and depth buffers
         ClearBuffer(&buffer);
-        ClearDepthBuffer(screenCells);
+        ClearDepthBuffer(depthBuffer);
 
         // Main rendering
         for (int i = 0; i < sceneSize; i++) {
             for (int j = 0; j < scene[i].triangleCount; j++) {
-                RenderTriangle(&scene[i].mesh[j], &scene[i], &cam, screenCells, &buffer, frags);
+                RenderTriangle(&scene[i].mesh[j], &scene[i], &cam, depthBuffer, &buffer);
             }
         }
 
@@ -387,8 +362,7 @@ int main(int argc, char *argv[]) {
     ShutdownTerm(&original);
 
     free(buffer.data);
-    free(screenCells);
-    free(frags);
+    free(depthBuffer);
     
     for (int i = 0; i < sceneSize; i++) {
         free(scene[i].mesh);

@@ -5,7 +5,7 @@ int LoadSceneFromFile(char *path, Object *scene) {
     FILE *ptr = fopen(path, "r");
 
     if (ptr == NULL) {
-        printf("Failed to load file");
+        printf("Failed to load scene file");
         return 0;
     }
 

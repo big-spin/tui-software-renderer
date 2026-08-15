@@ -36,10 +36,6 @@ typedef struct {
 } Vertex;
 
 typedef struct {
-    float currentDepth;
-} Cell;
-
-typedef struct {
     Vertex vertices[3];
 } Triangle;
 
