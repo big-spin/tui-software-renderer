@@ -1,6 +1,11 @@
 #ifndef MATRIX_MATH_H
 #define MATRIX_MATH_H
+
 #include "custom-types.h"
+
+#define PI 3.1415926
+
+#define DEG2RAD(x) ((x)*PI / 180.0f)
 
 Vec3 MatrixVec3Multiplication(Vec3 vec, int matrixSize, float matrix[matrixSize][matrixSize]);
 

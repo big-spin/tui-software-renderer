@@ -2,10 +2,6 @@
 #include "../include/term.h"
 #include "../include/scene-loader.h"
 
-#define PI 3.1415926
-
-#define DEG2RAD(x) ((x)*PI / 180.0f)
-
 struct termios original;
 
 int width, height;
@@ -271,9 +267,9 @@ void RenderTriangle(Triangle *triangle, Object *obj, Camera *cam, Cell *screenCe
     FragmentWriting(frags, buffer, count);
 }
 
-int main(void) {
+int main(int argc, char *argv[]) {
     Object *scene = malloc(3 * sizeof(Object));
-    int sceneSize = LoadSceneFromFile("demo.scene", scene);
+    int sceneSize = LoadSceneFromFile(argv[1], scene);
 
     // Terminal setup
     tcgetattr(STDIN_FILENO, &original);

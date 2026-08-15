@@ -68,23 +68,23 @@ Vec3 RotateVec3AroundAxis(Vec3 vec, float angle, RotationAxis axis) {
             return MatrixVec3Multiplication(vec, 3, 
                 (float[3][3]){
                     {1, 0, 0},
-                    {0, cos(angle), - sin(angle)},
-                    {0, sin(angle), cos(angle)},
+                    {0, cos(DEG2RAD(angle)), - sin(DEG2RAD(angle))},
+                    {0, sin(DEG2RAD(angle)), cos(DEG2RAD(angle))},
                 }
             );
         case Y_AXIS:
             return MatrixVec3Multiplication(vec, 3, 
                 (float[3][3]){
-                    {cos(angle), 0, sin(angle)},
+                    {cos(DEG2RAD(angle)), 0, sin(DEG2RAD(angle))},
                     {0, 1, 0},
-                    {- sin(angle), 0, cos(angle)},
+                    {- sin(DEG2RAD(angle)), 0, cos(DEG2RAD(angle))},
                 }
             );
         case Z_AXIS:
             return MatrixVec3Multiplication(vec, 3, 
                 (float[3][3]){
-                    {cos(angle), - sin(angle), 0},
-                    {sin(angle), cos(angle), 0},
+                    {cos(DEG2RAD(angle)), - sin(DEG2RAD(angle)), 0},
+                    {sin(DEG2RAD(angle)), cos(DEG2RAD(angle)), 0},
                     {0, 0, 1 },
                 }
             );
