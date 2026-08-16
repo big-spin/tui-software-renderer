@@ -232,8 +232,8 @@ void RenderTriangle(Triangle *triangle, Object *obj, Camera *cam, float *depthBu
 }
 
 int main(int argc, char *argv[]) {
-    Object *scene = malloc(3 * sizeof(Object));
-    int sceneSize = LoadSceneFromFile(argv[1], scene);
+    Object *scene = malloc(sizeof(Object));
+    int sceneSize = LoadSceneFromFile(argv[1], &scene);
 
     if (sceneSize == 0) {
         return 1;

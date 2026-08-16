@@ -3,6 +3,6 @@
 
 #include "../include/custom-types.h"
 
-int LoadSceneFromFile(char *path, Object *scene);
+int LoadSceneFromFile(char *path, Object **scene);
 
 #endif

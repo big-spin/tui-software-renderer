@@ -1,8 +1,7 @@
 #include "../include/scene-loader.h"
 #include "../include/obj-loader.h"
-#include <stdlib.h>
 
-int LoadSceneFromFile(char *path, Object *scene) {
+int LoadSceneFromFile(char *path, Object **scene) {
     FILE *ptr = fopen(path, "r");
 
     if (ptr == NULL) {
@@ -13,9 +12,11 @@ int LoadSceneFromFile(char *path, Object *scene) {
     char data[100];
     int n = 0;
 
-    int line = 1;
+    int line = 0;
 
     while (fgets(data, sizeof(data), ptr)) {
+        line++;
+
         char copy[100];
         strcpy(copy, data);
 
@@ -30,13 +31,15 @@ int LoadSceneFromFile(char *path, Object *scene) {
                 return 0;
             }
 
-            scene[n].mesh = malloc(1000 * sizeof(Triangle));
-            int triCount = LoadMeshFromFile(fileToLoad, scene[n].mesh);
+            (*scene) = realloc((*scene), (n + 1) * sizeof(Object));
+
+            (*scene)[n].mesh = malloc(1000 * sizeof(Triangle));
+            int triCount = LoadMeshFromFile(fileToLoad, (*scene)[n].mesh);
             if (triCount == 0) {
                 return 0;
             }
 
-            scene[n].triangleCount = triCount;
+            (*scene)[n].triangleCount = triCount;
 
             n++;
         }
@@ -54,7 +57,7 @@ int LoadSceneFromFile(char *path, Object *scene) {
                 return 0;
             }
 
-            scene[idx].position = (Vec3){x, y, z};
+            (*scene)[idx].position = (Vec3){x, y, z};
         }
         else if (strcmp(split, "ROTATE") == 0) {
             int idx;
@@ -70,10 +73,8 @@ int LoadSceneFromFile(char *path, Object *scene) {
                 return 0;
             }
 
-            scene[idx].rotation = (Vec3){x, y, z};
+            (*scene)[idx].rotation = (Vec3){x, y, z};
         }
-
-        line++;
     }
 
     fclose(ptr);

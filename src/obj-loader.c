@@ -20,9 +20,11 @@ int LoadMeshFromFile(char *path, Triangle *mesh) {
 
     int triangleCount = 0;
 
-    int line = 1;
+    int line = 0;
     
     while (fgets(data, sizeof(data), ptr)) {
+        line++;
+        
         if (data[0] == 'v') {
             if (data[1] == ' ') {
                 int out = sscanf(data, " v %f %f %f", &positions[vertexCount].x, &positions[vertexCount].y, &positions[vertexCount].z);
@@ -109,8 +111,6 @@ int LoadMeshFromFile(char *path, Triangle *mesh) {
 
             triangleCount++;
         }
-
-        line++;
     }
 
     fclose(ptr);
