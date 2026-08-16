@@ -1,16 +1,19 @@
 #include "../include/scene-loader.h"
 #include "../include/obj-loader.h"
+#include <stdlib.h>
 
 int LoadSceneFromFile(char *path, Object *scene) {
     FILE *ptr = fopen(path, "r");
 
     if (ptr == NULL) {
-        printf("Failed to load scene file");
+        printf("Error loading scene: (can't find '%s')\n", path);
         return 0;
     }
 
     char data[100];
     int n = 0;
+
+    int line = 1;
 
     while (fgets(data, sizeof(data), ptr)) {
         char copy[100];
@@ -21,10 +24,18 @@ int LoadSceneFromFile(char *path, Object *scene) {
         if (strcmp(split, "LOAD") == 0) {
             char fileToLoad[100];
 
-            sscanf(data, "LOAD %s", fileToLoad);
+            int out = sscanf(data, "LOAD %s", fileToLoad);
+            if (out != 1) {
+                printf("Error loading scene: (invalid command at '%s:%d')\n", path, line);
+                return 0;
+            }
 
             scene[n].mesh = malloc(1000 * sizeof(Triangle));
-            int triCount = LoadFromFile(fileToLoad, scene[n].mesh);
+            int triCount = LoadMeshFromFile(fileToLoad, scene[n].mesh);
+            if (triCount == 0) {
+                return 0;
+            }
+
             scene[n].triangleCount = triCount;
 
             n++;
@@ -33,7 +44,15 @@ int LoadSceneFromFile(char *path, Object *scene) {
             int idx;
             int x, y, z;
 
-            sscanf(data, "MOVE %d %d/%d/%d", &idx, &x, &y, &z);
+            int out = sscanf(data, "MOVE %d %d/%d/%d", &idx, &x, &y, &z);
+            if (out != 4) {
+                printf("Error loading scene: (invalid command at '%s:%d')\n", path, line);
+                return 0;
+            }
+            if (idx > (n - 1)) {
+                printf("Error moving object: (acessing non-existent object at '%s:%d')\n", path, line);
+                return 0;
+            }
 
             scene[idx].position = (Vec3){x, y, z};
         }
@@ -41,10 +60,20 @@ int LoadSceneFromFile(char *path, Object *scene) {
             int idx;
             int x, y, z;
 
-            sscanf(data, "ROTATE %d %d/%d/%d", &idx, &x, &y, &z);
+            int out = sscanf(data, "ROTATE %d %d/%d/%d", &idx, &x, &y, &z);
+            if (out != 4) {
+                printf("Error loading scene: (invalid command at '%s:%d')\n", path, line);
+                return 0;
+            }
+            if (idx > (n - 1)) {
+                printf("Error rotating object: (acessing non-existent object at '%s:%d')\n", path, line);
+                return 0;
+            }
 
             scene[idx].rotation = (Vec3){x, y, z};
         }
+
+        line++;
     }
 
     fclose(ptr);

@@ -3,7 +3,7 @@
 
 #include "../include/custom-types.h"
 
-int LoadFromFile(char *path, Triangle *mesh);
+int LoadMeshFromFile(char *path, Triangle *mesh);
 
 Vertex GetVertexFromText(char *text);
 Triangle GetTriangleFromText(char *text, Vertex *vertices);

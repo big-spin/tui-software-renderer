@@ -1,7 +1,6 @@
 #include "../include/matrix-math.h"
 #include "../include/term.h"
 #include "../include/scene-loader.h"
-#include <math.h>
 
 struct termios original;
 
@@ -13,7 +12,7 @@ float perspectiveMatrix[4][4];
 
 // Initialize the perspective matrix to use in Clip Space Transformation.
 void UpdatePerspectiveMatrix() {
-    float fov = 40.0 * PI / 180.0;
+    float fov = 25.0 * PI / 180.0;
     float aspect = (float)width / height;
 
     float fy = 1.0 / tan(fov / 2.0);
@@ -76,28 +75,15 @@ Vertex RotateVertex(Vertex vx, float x, float y, float z) {
     return RotateVertexAroundAxis(RotateVertexAroundAxis(RotateVertexAroundAxis(vx, z, Z_AXIS), y, Y_AXIS), x, X_AXIS);
 }
 
-// Move a vertex by n in a given axis (x, y or z).
-Vertex TranslateVertexAlongAxis(Vertex vx, float n, MovementAxis axis) {
-    Vertex out = vx;
-
-    switch (axis) {
-        case X_AXIS:
-            out.pos.x += n;
-            break;
-        case Y_AXIS:
-            out.pos.y += n;
-            break;
-        case Z_AXIS:
-            out.pos.z += n;
-            break;
-    }
-
-    return out;
-}
-
 // Move a vertex in all 3 axis at once.
 Vertex TranslateVertex(Vertex vx, float x, float y, float z) {
-    return TranslateVertexAlongAxis(TranslateVertexAlongAxis(TranslateVertexAlongAxis(vx, x, X_AXIS), z, Z_AXIS), y, Y_AXIS);
+    Vertex out = vx;
+
+    out.pos.x += x;
+    out.pos.y += y;
+    out.pos.z += z;
+
+    return out;
 }
 
 // Move and rotate a vertex based on it's position and rotation.
@@ -248,6 +234,10 @@ void RenderTriangle(Triangle *triangle, Object *obj, Camera *cam, float *depthBu
 int main(int argc, char *argv[]) {
     Object *scene = malloc(3 * sizeof(Object));
     int sceneSize = LoadSceneFromFile(argv[1], scene);
+
+    if (sceneSize == 0) {
+        return 1;
+    }
 
     // Terminal setup
     tcgetattr(STDIN_FILENO, &original);

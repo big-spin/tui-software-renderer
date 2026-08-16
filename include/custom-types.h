@@ -30,9 +30,14 @@ typedef struct {
 } WindowCoords, Fragment, Vec3, NdCoords;
 
 typedef struct {
+    float x;
+    float y;
+} Vec2;
+
+typedef struct {
     Vec3 pos;
     Vec3 nor;
-    Vec3 uv;
+    Vec2 uv;
 } Vertex;
 
 typedef struct {
@@ -40,10 +45,10 @@ typedef struct {
 } Triangle;
 
 typedef struct {
-    Triangle *mesh;
-    int triangleCount;
     Vec3 position;
     Vec3 rotation;
+    Triangle *mesh;
+    int triangleCount;
 } Object;
 
 typedef enum {
