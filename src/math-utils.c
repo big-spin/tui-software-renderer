@@ -1,4 +1,4 @@
-#include "../include/matrix-math.h"
+#include "../include/math-utils.h"
 
 Vec3 MatrixVec3Multiplication(Vec3 vec, int matrixSize, float  matrix[matrixSize][matrixSize]) {
     Vec3 ret = { 0, 0, 0 };
@@ -91,4 +91,17 @@ Vec3 RotateVec3AroundAxis(Vec3 vec, float angle, RotationAxis axis) {
     }
 
     return vec;
+}
+
+ClipCoords Lerp(ClipCoords p0, ClipCoords p1, float t) {
+    ClipCoords out;
+    if (t > 1.0) t = 1.0;
+    if (t < 0.0) t = 0.0;
+
+    out.x = p0.x + (p1.x - p0.x) * t;
+    out.y = p0.y + (p1.y - p0.y) * t;
+    out.z = p0.z + (p1.z - p0.z) * t;
+    out.w = p0.w + (p1.w - p0.w) * t;
+
+    return out;
 }

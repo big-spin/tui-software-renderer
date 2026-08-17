@@ -1,4 +1,4 @@
-#include "../include/matrix-math.h"
+#include "../include/math-utils.h"
 #include "../include/term.h"
 #include "../include/scene-loader.h"
 
@@ -6,7 +6,7 @@ struct termios original;
 
 int width, height;
 
-int wireframeMode = 1;
+int wireframeMode = 0;
 
 float perspectiveMatrix[4][4];
 
@@ -18,7 +18,7 @@ void UpdatePerspectiveMatrix() {
     float fy = 1.0 / tan(fov / 2.0);
     float fx = fy / aspect;
 
-    float zNear = 0.2;
+    float zNear = 0.001;
     float zFar = 4.0;
 
     float clip1 = (zFar + zNear) / (zNear - zFar);
@@ -135,14 +135,9 @@ int min(int a, int b, int c) {
 
 // Clamps an integer value n between a max and min value.
 int clamp(int n, int max, int min) {
-    if (n < max && n > min) {
-        return n;
-    }
-    else if (n > max) {
-        return max;
-    }
-
-    return min;
+    if (n < min) return min;
+    if (n > max) return max;
+    return n;
 }
 
 // Calculates the triangle's bounding box for faster scan conversion.
@@ -211,15 +206,7 @@ void ClearDepthBuffer(float *buffer) {
     }
 }
 
-void RenderTriangle(Triangle *triangle, Object *obj, Camera *cam, float *depthBuffer, TextBuffer *buffer) {
-    ClipCoords c0 = ClipSpaceTransform(ViewTransfrom(LocalTransform(triangle->vertices[0], *obj), *cam));
-    ClipCoords c1 = ClipSpaceTransform(ViewTransfrom(LocalTransform(triangle->vertices[1], *obj), *cam));
-    ClipCoords c2 = ClipSpaceTransform(ViewTransfrom(LocalTransform(triangle->vertices[2], *obj), *cam));
-
-    if (c0.w <= 0 || c1.w <= 0 || c2.w <= 0) {
-        return;
-    }
-
+void RenderTriangle(ClipCoords c0, ClipCoords c1, ClipCoords c2, float *depthBuffer, TextBuffer *buffer) {
     WindowCoords finalWC[3];
     BoundingBox box;
 
@@ -229,6 +216,57 @@ void RenderTriangle(Triangle *triangle, Object *obj, Camera *cam, float *depthBu
 
     CalculateBoundingBox(finalWC, &box);
     ScanConversion(finalWC, &box, depthBuffer, buffer);
+}
+
+void ClipTriangle(Triangle *triangle, Object *obj, Camera *cam, float *depthBuffer, TextBuffer *buffer) {
+    ClipCoords cc[3];
+
+    cc[0] = ClipSpaceTransform(ViewTransfrom(LocalTransform(triangle->vertices[0], *obj), *cam));
+    cc[1] = ClipSpaceTransform(ViewTransfrom(LocalTransform(triangle->vertices[1], *obj), *cam));
+    cc[2] = ClipSpaceTransform(ViewTransfrom(LocalTransform(triangle->vertices[2], *obj), *cam));
+
+    int clip0 = 0, clip1 = 0, clip2 = 0;
+    if (cc[0].w <= 0.001) clip0 = 1;
+    if (cc[1].w <= 0.001) clip1 = 1;
+    if (cc[2].w <= 0.001) clip2 = 1;
+
+    int clipCount = clip0 + clip1 + clip2;
+    int idxClip, idxNonClip, idxNext, idxPrev;
+
+    switch (clipCount) {
+        case 0:
+            RenderTriangle(cc[0], cc[1], cc[2], depthBuffer, buffer);
+            break;
+        case 1:
+            idxClip = (clip0 == 1) ? 0 : (clip1 == 1) ? 1 : 2;
+            idxNext = (idxClip + 1) % 3;
+            idxPrev = (idxClip - 1 + 3) % 3;
+
+            float fracA = (0.001 - cc[idxClip].w) / (cc[idxNext].w - cc[idxClip].w);
+            float fracB = (0.001 - cc[idxClip].w) / (cc[idxPrev].w - cc[idxClip].w);
+
+            ClipCoords clipPointEdgeA = Lerp(cc[idxClip], cc[idxNext], fracA);
+            ClipCoords clipPointEdgeB = Lerp(cc[idxClip], cc[idxPrev], fracB);
+
+            RenderTriangle(clipPointEdgeB, clipPointEdgeA, cc[idxPrev], depthBuffer, buffer);
+            RenderTriangle(clipPointEdgeA, cc[idxNext], cc[idxPrev], depthBuffer, buffer);
+            break;
+        case 2:
+            idxNonClip = (clip0 == 0) ? 0 : (clip1 == 0) ? 1 : 2;
+            idxNext = (idxNonClip + 1) % 3;
+            idxPrev = (idxNonClip - 1 + 3) % 3;
+            
+            fracA = (0.001 - cc[idxNonClip].w) / (cc[idxNext].w - cc[idxNonClip].w);
+            fracB = (0.001 - cc[idxNonClip].w) / (cc[idxPrev].w - cc[idxNonClip].w);
+
+            clipPointEdgeA = Lerp(cc[idxNonClip], cc[idxNext], fracA);
+            clipPointEdgeB = Lerp(cc[idxNonClip], cc[idxPrev], fracB);
+
+            RenderTriangle(clipPointEdgeB, cc[idxNonClip], clipPointEdgeA, depthBuffer, buffer);
+            break;
+        case 3:
+            return;
+    }
 }
 
 int main(int argc, char *argv[]) {
@@ -295,7 +333,7 @@ int main(int argc, char *argv[]) {
         // Main rendering
         for (int i = 0; i < sceneSize; i++) {
             for (int j = 0; j < scene[i].triangleCount; j++) {
-                RenderTriangle(&scene[i].mesh[j], &scene[i], &cam, depthBuffer, &buffer);
+                ClipTriangle(&scene[i].mesh[j], &scene[i], &cam, depthBuffer, &buffer);
             }
         }
 
@@ -343,6 +381,10 @@ int main(int argc, char *argv[]) {
                     break;
                 case 'l':
                     cam.yaw -= cam.rotationSpeed;
+                    break;
+                case 'v':
+                    if (wireframeMode == 0) wireframeMode = 1;
+                    else wireframeMode = 0;
                     break;
             }
         }

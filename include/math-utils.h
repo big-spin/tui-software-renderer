@@ -1,5 +1,5 @@
-#ifndef MATRIX_MATH_H
-#define MATRIX_MATH_H
+#ifndef MATH_UTILS_H
+#define MATH_UTILS_H
 
 #include "custom-types.h"
 
@@ -14,4 +14,6 @@ Vec4 MatrixVec4Multiplication(Vec4 vec, int matrixSize, float matrix[matrixSize]
 Vec3 AddVec3(Vec3 vec1, Vec3 vec2);
 
 Vec3 RotateVec3AroundAxis(Vec3 vec, float angle, RotationAxis axis);
+
+ClipCoords Lerp(ClipCoords p0, ClipCoords p1, float t);
 #endif
