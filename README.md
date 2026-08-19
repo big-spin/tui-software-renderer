@@ -28,7 +28,9 @@ Run the renderer
 
 Scene files (ending in .scene) can be loaded by the renderer and tell it which objects to load, where to place them and if they have any rotation.
 
-There are three available commands in scene files:
+There are four available commands in scene files:
+
+
 
 `LOAD <path-to-.obj-file>`
 
@@ -36,13 +38,47 @@ Will load and render a new obj file
 
 It also attributes an id to the object based on the loading order, the first object loaded gets id 0, the second one gets id 1 and so on.
 
+
+
 `MOVE <id> <x>/<y>/<z>`
 
 Moves an object with id to a new position of (x, y, z)
 
+
+
 `ROTATE <id> <x>/<y>/<z>`
 
 Rotates an object with id to a new rotation of (x, y, z)
+
+
+
+`ASSIGN <id> <function-name>`
+
+This will assign a new function to the object with id
+
+The function must be declared in main.c and obey the following structure:
+
+```
+void foo(Object *obj, Event *ev) {
+    ...
+}
+```
+
+Then, in order to assign this function to an object in your scene, create a NameFunctionPair that pairs the name in your .scene file with your actual function
+
+```
+NameFunctionPair funcs[1] = {
+    {"foo", foo},
+};
+```
+
+Then you pass the array of NameFunctionPairs to `LoadSceneFromFile()`, along with the number of custom functions you defined
+
+```
+int sceneSize = LoadSceneFromFile(argv[1], &scene, funcs, 1);
+```
+
+
 
 ### Example scene
 
@@ -56,6 +92,8 @@ MOVE 1 0/0/-2
 MOVE 2 8/0/-2
 
 ROTATE 1 0/90/0
+
+ASSIGN 1 Spin
 ```
 
 ## Useful links

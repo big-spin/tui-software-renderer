@@ -45,11 +45,43 @@ typedef struct {
 } Triangle;
 
 typedef struct {
+    int w;
+    int a;
+    int s;
+    int d;
+
+    int r;
+    int f;
+
+    int i;
+    int j;
+    int k;
+    int l;
+} Keyboard;
+
+typedef struct {
+    int quit;
+    int frameNumber;
+    Keyboard keys;
+} Event;
+
+typedef struct Object Object;
+
+typedef void (*ObjectFunction)(Object*, Event*);
+
+struct Object {
     Vec3 position;
     Vec3 rotation;
     Triangle *mesh;
     int triangleCount;
-} Object;
+    ObjectFunction func;
+    int hasFunction;
+};
+
+typedef struct {
+    const char *name;
+    const ObjectFunction func;
+} NameFunctionPair;
 
 typedef enum {
     X_AXIS,

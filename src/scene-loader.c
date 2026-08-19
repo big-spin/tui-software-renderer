@@ -1,7 +1,8 @@
 #include "../include/scene-loader.h"
 #include "../include/obj-loader.h"
+#include <unistd.h>
 
-int LoadSceneFromFile(char *path, Object **scene) {
+int LoadSceneFromFile(char *path, Object **scene, NameFunctionPair *funcs, int funcCount) {
     FILE *ptr = fopen(path, "r");
 
     if (ptr == NULL) {
@@ -32,6 +33,7 @@ int LoadSceneFromFile(char *path, Object **scene) {
             }
 
             (*scene) = realloc((*scene), (n + 1) * sizeof(Object));
+            (*scene)[n].hasFunction = 0;
 
             (*scene)[n].mesh = malloc(1000 * sizeof(Triangle));
             int triCount = LoadMeshFromFile(fileToLoad, (*scene)[n].mesh);
@@ -74,6 +76,35 @@ int LoadSceneFromFile(char *path, Object **scene) {
             }
 
             (*scene)[idx].rotation = (Vec3){x, y, z};
+        }
+        else if (strcmp(split, "ASSIGN") == 0) {
+            int idx;
+            char name[50];
+
+            int out = sscanf(data, "ASSIGN %d %s", &idx, name);
+            if (out != 2) {
+                printf("Error assigning function to object: (invalid command at '%s:%d')\n", path, line);
+                return 0;
+            }
+            if (idx > (n - 1)) {
+                printf("Error assigning function to object: (acessing non-existent object at '%s:%d')\n", path, line);
+                return 0;
+            }
+
+            int found = 0;
+            for (int i = 0; i < funcCount; i++) {
+                if (strcmp(name, funcs[i].name) == 0) {
+                    (*scene)[idx].func = funcs[i].func;
+                    (*scene)[idx].hasFunction = 1;
+                    found = 1;
+                    break;
+                }
+            }
+
+            if (found == 0) {
+                printf("Error assigning function to object: (non existent function '%s' at '%s:%d')\n", name, path, line);
+                return 0;
+            }
         }
     }
 

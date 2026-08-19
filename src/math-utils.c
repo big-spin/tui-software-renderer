@@ -105,3 +105,33 @@ ClipCoords Lerp(ClipCoords p0, ClipCoords p1, float t) {
 
     return out;
 }
+
+int max(int a, int b, int c) {
+    int _max = a > b ? a : b;
+    return _max > c ? _max : c;
+}
+
+int min(int a, int b, int c) {
+    int _min = a < b ? a : b;
+    return _min < c ? _min : c;
+}
+
+int clamp(int n, int max, int min) {
+    if (n < min) return min;
+    if (n > max) return max;
+    return n;
+}
+
+void CalculateBoundingBox(WindowCoords wc0, WindowCoords wc1, WindowCoords wc2, BoundingBox *bb, int width, int height) {
+    int minX, maxX, minY, maxY;
+
+    minX = min(wc0.x, wc1.x, wc2.x);
+    maxX = max(wc0.x, wc1.x, wc2.x);
+    minY = min(wc0.y, wc1.y, wc2.y);
+    maxY = max(wc0.y, wc1.y, wc2.y);
+
+    bb->x1 = clamp(minX, width, 0);
+    bb->x2 = clamp(maxX, width, 0);
+    bb->y1 = clamp(minY, height, 0);
+    bb->y2 = clamp(maxY, height, 0);
+}
