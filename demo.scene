@@ -2,13 +2,9 @@ LOAD data/cars/Car4.obj
 LOAD data/cars/Car5.obj
 LOAD data/cars/Car6.obj
 
-LOAD data/quad.obj
-
-MOVE 0 -8/0/-4
-MOVE 1 0/0/-4
-MOVE 2 8/0/-4
-
-MOVE 3 0/0/-4
+MOVE 0 -8/0/-16
+MOVE 1 0/0/-16
+MOVE 2 8/0/-16
 
 ROTATE 1 0/90/0
 

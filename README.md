@@ -22,7 +22,11 @@ Compile it with make
 
 Run the renderer
 
-`./tui-raster`
+`./tui-raster demo.scene`
+
+If instead of rendering to the terminal, you'd prefer an x11 window, simply add `X11` to the end of the command
+
+`./tui-raster demo.scene X11`
 
 ## Scene files
 

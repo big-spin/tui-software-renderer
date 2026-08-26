@@ -3,9 +3,6 @@
 
 #include "../include/custom-types.h"
 
-#define OK  0
-#define ERR 1
-
 int TermWidth();
 
 int TermHeight();
@@ -18,12 +15,12 @@ void InitTerm(struct termios *original);
 
 void ShutdownTerm(struct termios *original);
 
-void AddToBuffer(TextBuffer *buf, int x, int y, char ch);
+void AddToBuffer(FrameBuffer *buf, int x, int y, uint32_t data);
 
-void ClearBuffer(TextBuffer *buf);
+void ClearBuffer(FrameBuffer *buf);
 
-void PresentBuffer(TextBuffer *buf);
+void PresentBuffer(FrameBuffer *buf);
 
-int PeekInput(char *out);
+void TermInput(Camera *cam, Event *ev);
 
 #endif

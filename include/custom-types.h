@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
 #include <unistd.h>
 #include <termios.h>
@@ -61,6 +62,7 @@ typedef struct {
 
 typedef struct {
     int quit;
+    int wireframeMode;
     int frameNumber;
     Keyboard keys;
 } Event;
@@ -90,10 +92,10 @@ typedef enum {
 } RotationAxis, MovementAxis;
 
 typedef struct {
-    char *data;
+    uint32_t *data;
     int width;
     int height;
-} TextBuffer;
+} FrameBuffer;
 
 typedef struct {
     Vec3 pos;
@@ -102,5 +104,10 @@ typedef struct {
     float speed;
     float rotationSpeed;
 } Camera;
+
+typedef enum {
+    X11,
+    Term,
+} Backend;
 
 #endif

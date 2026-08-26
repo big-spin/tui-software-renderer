@@ -8,7 +8,7 @@
 #define Z_NEAR 0.5f
 #define Z_FAR 10.0f
 
-void ScanConversion(ClipCoords c0, ClipCoords c1, ClipCoords c2, float *depthBuffer, TextBuffer *buf, int wireframeMode, int width, int height) {
+void ScanConversion(ClipCoords c0, ClipCoords c1, ClipCoords c2, float *depthBuffer, FrameBuffer *buf, int wireframeMode, int width, int height) {
     BoundingBox box;
 
     WindowCoords wc0 = WindowTransformation(NormalizeDeviceCoordinates(c0), width, height);
@@ -39,13 +39,13 @@ void ScanConversion(ClipCoords c0, ClipCoords c1, ClipCoords c2, float *depthBuf
 
             if (wireframeMode == 0) {
                 if (depth < depthBuffer[x + (y * width)]) {
-                    AddToBuffer(buf, x, y, '@');
+                    AddToBuffer(buf, x, y, 0x00FFFFFF);
                     depthBuffer[x + (y * width)] = depth;
                 }
             }
             else if (lambda1 <= 0.05 || lambda2 <= 0.05 || lambda3 <= 0.05) {
                 if (depth < depthBuffer[x + (y * width)]) {
-                    AddToBuffer(buf, x, y, '@');
+                    AddToBuffer(buf, x, y, 0x00FFFFFF);
                     depthBuffer[x + (y * width)] = depth;
                 }
             }
@@ -61,7 +61,7 @@ void ClearDepthBuffer(float *buffer, int width, int height) {
     }
 }
 
-void RenderTriangle(Triangle *triangle, Object *obj, Camera *cam, float *depthBuffer, TextBuffer *buffer, float perspectiveMatrix[4][4], int wireframeMode, int width, int height) {
+void RenderTriangle(Triangle *triangle, Object *obj, Camera *cam, float *depthBuffer, FrameBuffer *buffer, float perspectiveMatrix[4][4], int wireframeMode, int width, int height) {
     ClipCoords cc[3];
 
     cc[0] = ClipSpaceTransform(ViewTransfrom(LocalTransform(triangle->vertices[0], *obj), *cam), perspectiveMatrix);
