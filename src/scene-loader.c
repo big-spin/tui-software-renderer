@@ -1,6 +1,5 @@
 #include "../include/scene-loader.h"
 #include "../include/obj-loader.h"
-#include <unistd.h>
 
 int LoadSceneFromFile(char *path, Object **scene, NameFunctionPair *funcs, int funcCount) {
     FILE *ptr = fopen(path, "r");
@@ -43,6 +42,8 @@ int LoadSceneFromFile(char *path, Object **scene, NameFunctionPair *funcs, int f
 
             (*scene)[n].triangleCount = triCount;
 
+            (*scene)[n].scale = (Vec3){1,1,1};
+
             n++;
         }
         else if (strcmp(split, "MOVE") == 0) {
@@ -76,6 +77,22 @@ int LoadSceneFromFile(char *path, Object **scene, NameFunctionPair *funcs, int f
             }
 
             (*scene)[idx].rotation = (Vec3){x, y, z};
+        }
+        else if (strcmp(split, "SCALE") == 0) {
+            int idx;
+            int x, y, z;
+
+            int out = sscanf(data, "SCALE %d %d/%d/%d", &idx, &x, &y, &z);
+            if (out != 4) {
+                printf("Error loading scene: (invalid command at '%s:%d')\n", path, line);
+                return 0;
+            }
+            if (idx > (n - 1)) {
+                printf("Error scaling object: (acessing non-existent object at '%s:%d')\n", path, line);
+                return 0;
+            }
+
+            (*scene)[idx].scale = (Vec3){x, y, z};
         }
         else if (strcmp(split, "ASSIGN") == 0) {
             int idx;

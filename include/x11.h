@@ -7,10 +7,6 @@
 #include <X11/Xutil.h>
 #include <X11/keysym.h>
 
-int WindowWidth();
-
-int WindowHeight();
-
 void OpenX11Window();
 
 void CloseX11Window();

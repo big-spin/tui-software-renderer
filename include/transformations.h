@@ -9,6 +9,8 @@ Vertex RotateVertex(Vertex vx, float x, float y, float z);
 
 Vertex TranslateVertex(Vertex vx, float x, float y, float z);
 
+Vertex ScaleVertex(Vertex vx, float x, float y, float z);
+
 Vertex LocalTransform(Vertex vx, Object obj);
 
 Vertex ViewTransfrom(Vertex vx, Camera cam);

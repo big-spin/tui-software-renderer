@@ -8,7 +8,7 @@ int LoadMeshFromFile(char *path, Triangle *mesh) {
     FILE *ptr = fopen(path, "r");
 
     if (ptr == NULL) {
-        printf("Error loading obj file: (can't fine '%s')\n", path);
+        printf("Error loading obj file: (can't find '%s')\n", path);
         return 0;
     }
 

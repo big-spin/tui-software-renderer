@@ -3,8 +3,6 @@
 #include "../include/x11.h"
 #include "../include/scene-loader.h"
 #include "../include/render.h"
-#include <stdint.h>
-#include <sys/types.h>
 
 #define Z_NEAR 0.1f
 #define Z_FAR 10.0f

@@ -54,9 +54,18 @@ Vertex TranslateVertex(Vertex vx, float x, float y, float z) {
     return out;
 }
 
+Vertex ScaleVertex(Vertex vx, float x, float y, float z) {
+    vx.pos.x *= x;
+    vx.pos.y *= y;
+    vx.pos.z *= z;
+
+    return vx;
+}
+
 // Move and rotate a vertex based on it's position and rotation.
 Vertex LocalTransform(Vertex vx, Object obj) {
-    Vertex rotated = RotateVertex(vx, obj.rotation.x, obj.rotation.y, obj.rotation.z);
+    Vertex scaled = ScaleVertex(vx, obj.scale.x, obj.scale.y, obj.scale.z);
+    Vertex rotated = RotateVertex(scaled, obj.rotation.x, obj.rotation.y, obj.rotation.z);
     return TranslateVertex(rotated, obj.position.x, obj.position.y, obj.position.z);
 }
 

@@ -74,6 +74,7 @@ typedef void (*ObjectFunction)(Object*, Event*);
 struct Object {
     Vec3 position;
     Vec3 rotation;
+    Vec3 scale;
     Triangle *mesh;
     int triangleCount;
     ObjectFunction func;

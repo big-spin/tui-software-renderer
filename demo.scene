@@ -6,6 +6,4 @@ MOVE 0 -8/0/-16
 MOVE 1 0/0/-16
 MOVE 2 8/0/-16
 
-ROTATE 1 0/90/0
-
 ASSIGN 1 Spin

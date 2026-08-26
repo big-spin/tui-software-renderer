@@ -8,14 +8,6 @@ static GC gc;
 static XImage *img;
 static XEvent event;
 
-int WindowWidth() {
-    return 0;
-}
-
-int WindowHeight() {
-    return 0;
-}
-
 void OpenX11Window() {
     display = XOpenDisplay(NULL);
 
