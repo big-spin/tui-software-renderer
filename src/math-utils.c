@@ -108,6 +108,10 @@ ClipCoords Lerp(ClipCoords p0, ClipCoords p1, float t) {
     out.z = p0.z + (p1.z - p0.z) * t;
     out.w = p0.w + (p1.w - p0.w) * t;
 
+    out.nor.x = p0.nor.x + (p1.nor.x - p0.nor.x) * t;
+    out.nor.y = p0.nor.y + (p1.nor.y - p0.nor.y) * t;
+    out.nor.z = p0.nor.z + (p1.nor.z - p0.nor.z) * t;
+
     return out;
 }
 

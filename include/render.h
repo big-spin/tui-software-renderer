@@ -3,7 +3,7 @@
 
 #include "../include/custom-types.h"
 
-void ScanConversion(ClipCoords c0, ClipCoords c1, ClipCoords c2, float *depthBuffer, FrameBuffer *buf, int wireframeMode, int width, int height, float lightValue);
+void ScanConversion(ClipCoords c0, ClipCoords c1, ClipCoords c2, float *depthBuffer, FrameBuffer *buf, int wireframeMode, int width, int height);
 
 void ClearDepthBuffer(float *buffer, int width, int height);
 

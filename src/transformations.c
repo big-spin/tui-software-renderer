@@ -77,7 +77,13 @@ Vertex ViewTransfrom(Vertex vx, Camera cam) {
 
 // Multiply vertex coordinates by perspective matrix -> return clip coordinates.
 ClipCoords ClipSpaceTransform(Vertex vx, float perspectiveMatrix[4][4]) {
-    return MatrixVec4Multiplication((Vec4){ vx.pos.x, vx.pos.y, vx.pos.z, 1.0}, 4, perspectiveMatrix);
+    ClipCoords out;
+    Vec4 result = MatrixVec4Multiplication((Vec4){ vx.pos.x, vx.pos.y, vx.pos.z, 1.0}, 4, perspectiveMatrix);
+    out.x = result.x;
+    out.y = result.y;
+    out.z = result.z;
+    out.w = result.w;
+    return out;
 }
 
 // Divide cc's x, y and z components by w -> return normalized device coordinates.

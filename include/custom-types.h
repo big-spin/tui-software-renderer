@@ -20,9 +20,7 @@ typedef struct {
 typedef struct {
     float x;
     float y;
-    float z;
-    float w;
-} ClipCoords, Vec4;
+} Vec2;
 
 typedef struct {
     float x;
@@ -33,7 +31,17 @@ typedef struct {
 typedef struct {
     float x;
     float y;
-} Vec2;
+    float z;
+    float w;
+} Vec4;
+
+typedef struct {
+    float x;
+    float y;
+    float z;
+    float w;
+    Vec3 nor;    
+} ClipCoords;
 
 typedef struct {
     Vec3 pos;
