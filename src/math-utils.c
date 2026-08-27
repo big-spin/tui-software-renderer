@@ -93,8 +93,13 @@ Vec3 RotateVec3AroundAxis(Vec3 vec, float angle, RotationAxis axis) {
     return vec;
 }
 
+Vec3 RotateVec3(Vec3 vec, float x, float y, float z) {
+    return RotateVec3AroundAxis(RotateVec3AroundAxis(RotateVec3AroundAxis(vec, x, X_AXIS), y, Y_AXIS), z, Z_AXIS);
+}
+
 ClipCoords Lerp(ClipCoords p0, ClipCoords p1, float t) {
     ClipCoords out;
+
     if (t > 1.0) t = 1.0;
     if (t < 0.0) t = 0.0;
 
@@ -108,17 +113,20 @@ ClipCoords Lerp(ClipCoords p0, ClipCoords p1, float t) {
 
 int max(int a, int b, int c) {
     int _max = a > b ? a : b;
+
     return _max > c ? _max : c;
 }
 
 int min(int a, int b, int c) {
     int _min = a < b ? a : b;
+
     return _min < c ? _min : c;
 }
 
 int clamp(int n, int max, int min) {
     if (n < min) return min;
     if (n > max) return max;
+
     return n;
 }
 
@@ -134,4 +142,24 @@ void CalculateBoundingBox(WindowCoords wc0, WindowCoords wc1, WindowCoords wc2, 
     bb->x2 = clamp(maxX, width, 0);
     bb->y1 = clamp(minY, height, 0);
     bb->y2 = clamp(maxY, height, 0);
+}
+
+float DotProduct(Vec3 vec1, Vec3 vec2) {
+    float out = 0;
+
+    out += vec1.x * vec2.x;
+    out += vec1.y * vec2.y;
+    out += vec1.z * vec2.z;
+
+    return out;
+}
+
+void Normalize(Vec3 *vec) {
+    float length = vec->x * vec->x + vec->y * vec->y + vec->z * vec->z;
+    
+    if (length > 0) length = 1 / sqrt(length);
+
+    vec->x *= length;
+    vec->y *= length;
+    vec->z *= length;
 }

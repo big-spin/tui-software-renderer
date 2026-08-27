@@ -52,11 +52,22 @@ void ClearBuffer(FrameBuffer *buf) {
     for (int i = 0; i < (buf->width * buf->height); i++) buf->data[i] = 0x00000000;
 }
 
+char LightLevelToChar(uint32_t light) {
+    int lightValue = (int)(light / 1677721);
+
+    if (lightValue < 0) lightValue = 0;
+    if (lightValue > 10) lightValue = 10;
+
+    char ramp[10] = {'.', ':', '-', '=', '+', '*', '#', '%', '@', '$'};
+
+    return ramp[lightValue];
+}
+
 void PresentBuffer(FrameBuffer *buf) {
     write(STDOUT_FILENO, "\x1B[H", 3);
     char data[(buf->width * buf->height)];
     for (int i = 0; i < (buf->width * buf->height); i++) {
-        if (buf->data[i] == 0x00FFFFFF) data[i] = '@';
+        if (buf->data[i] != 0x00000000) data[i] = LightLevelToChar(buf->data[i]);
         else data[i] = ' ';
     }
     write(STDOUT_FILENO, data, (buf->width * buf->height));

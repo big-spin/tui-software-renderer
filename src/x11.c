@@ -24,12 +24,19 @@ void OpenX11Window() {
         BlackPixel(display, screen),
         WhitePixel(display, screen)
     );
+
     XMapWindow(display, window);
     XFlush(display);
 
     gc = XCreateGC(display, window, 0, NULL);
 
     XSelectInput(display, window, KeyPressMask | StructureNotifyMask);
+
+    XWindowChanges changes;
+    changes.width = 640;
+    changes.height = 480;
+    changes.stack_mode = Above;
+    XConfigureWindow(display, window, CWWidth | CWHeight | CWStackMode, &changes);
 }
 
 void CloseX11Window() {

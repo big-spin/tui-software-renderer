@@ -1,8 +1,11 @@
 #include "../include/math-utils.h"
 #include "../include/term.h"
-#include "../include/x11.h"
 #include "../include/scene-loader.h"
 #include "../include/render.h"
+
+#ifndef NO_X11
+#include "../include/x11.h" 
+#endif
 
 #define Z_NEAR 0.1f
 #define Z_FAR 10.0f
@@ -61,18 +64,20 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    if(backend == X11) {
-        OpenX11Window();
-        width = 640;
-        height = 480;
-    }
-    else {
+    if (backend == Term) {
         tcgetattr(STDIN_FILENO, &original);
         InitTerm(&original);
 
         width = TermWidth();
         height = TermHeight();
     }
+    #ifndef NO_X11
+    else {
+        OpenX11Window();
+        width = 640;
+        height = 480;
+    }
+    #endif
 
     // Initialize perspective matrix
     UpdatePerspectiveMatrix();
@@ -80,16 +85,17 @@ int main(int argc, char *argv[]) {
     FrameBuffer buffer;
     buffer.data = malloc(width * height * sizeof(uint32_t));
 
+    buffer.width = TermWidth();
+    buffer.height = TermHeight();
+
+    #ifndef NO_X11
     if (backend == X11) {
         buffer.width = 640;
         buffer.height = 480;
 
         SetupXImage(&buffer, 640, 480);
     }
-    else {
-        buffer.width = TermWidth();
-        buffer.height = TermHeight();
-    }
+    #endif
 
     float *depthBuffer = malloc(width * height * sizeof(float));
 
@@ -112,7 +118,7 @@ int main(int argc, char *argv[]) {
     // Main loop
     while (ev.quit != 1) {
         // Update width and height values if necessary and recalculate everything that depends on those values
-        if (backend == Term) if (width != TermWidth() || height != TermHeight()) {
+        if (backend == Term && (width != TermWidth() || height != TermHeight())) {
             width = TermWidth();
             height = TermHeight();
 
@@ -123,6 +129,7 @@ int main(int argc, char *argv[]) {
             buffer.data = realloc(buffer.data, width * height * sizeof(uint32_t));
             buffer.width = width;
             buffer.height = height;
+            puts("Resizing terminal");
         }
 
         // Clear frame and depth buffers
@@ -142,11 +149,14 @@ int main(int argc, char *argv[]) {
         }
 
         // Present buffer
-        if (backend == X11) PresentBufferX11(&buffer);
-        else PresentBuffer(&buffer);
+        if (backend == Term) PresentBuffer(&buffer);
+        #ifndef NO_X11
+        else if (backend == X11) PresentBufferX11(&buffer);
+        #endif
 
         // Input handling and camera movement + rotation
         if (backend == Term) TermInput(&cam, &ev);
+        #ifndef NO_X11
         else if (X11Input(&cam, &ev, &width, &height) == 1) {
             UpdatePerspectiveMatrix();
 
@@ -158,6 +168,7 @@ int main(int argc, char *argv[]) {
 
             SetupXImage(&buffer, width, height);
         }
+        #endif
 
         ev.frameNumber++;
     }
@@ -166,7 +177,9 @@ int main(int argc, char *argv[]) {
     if (backend == Term) {
         ShutdownTerm(&original);
     }
+    #ifndef NO_X11
     else CloseX11Window();
+    #endif
 
     free(depthBuffer);
     

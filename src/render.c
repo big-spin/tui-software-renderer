@@ -2,13 +2,12 @@
 #include "../include/transformations.h"
 #include "../include/math-utils.h"
 #include "../include/term.h"
-
 #include "../include/render.h"
 
 #define Z_NEAR 0.5f
 #define Z_FAR 10.0f
 
-void ScanConversion(ClipCoords c0, ClipCoords c1, ClipCoords c2, float *depthBuffer, FrameBuffer *buf, int wireframeMode, int width, int height) {
+void ScanConversion(ClipCoords c0, ClipCoords c1, ClipCoords c2, float *depthBuffer, FrameBuffer *buf, int wireframeMode, int width, int height, float lightRaw) {
     BoundingBox box;
 
     WindowCoords wc0 = WindowTransformation(NormalizeDeviceCoordinates(c0), width, height);
@@ -18,6 +17,9 @@ void ScanConversion(ClipCoords c0, ClipCoords c1, ClipCoords c2, float *depthBuf
     CalculateBoundingBox(wc0, wc1, wc2, &box, width, height);
 
     float det = ((wc1.y-wc2.y)*(wc0.x-wc2.x)+(wc2.x-wc1.x)*(wc0.y-wc2.y));
+
+    uint32_t light = (uint32_t)(lightRaw * 255);
+    uint32_t pixel = (light << 16) | (light << 8) | light;
     
     for (int x = box.x1; x < box.x2; x++) {
         for (int y = box.y1; y < box.y2; y++) {
@@ -39,13 +41,13 @@ void ScanConversion(ClipCoords c0, ClipCoords c1, ClipCoords c2, float *depthBuf
 
             if (wireframeMode == 0) {
                 if (depth < depthBuffer[x + (y * width)]) {
-                    AddToBuffer(buf, x, y, 0x00FFFFFF);
+                    AddToBuffer(buf, x, y, pixel);
                     depthBuffer[x + (y * width)] = depth;
                 }
             }
             else if (lambda1 <= 0.05 || lambda2 <= 0.05 || lambda3 <= 0.05) {
                 if (depth < depthBuffer[x + (y * width)]) {
-                    AddToBuffer(buf, x, y, 0x00FFFFFF);
+                    AddToBuffer(buf, x, y, pixel);
                     depthBuffer[x + (y * width)] = depth;
                 }
             }
@@ -76,9 +78,22 @@ void RenderTriangle(Triangle *triangle, Object *obj, Camera *cam, float *depthBu
     int clipCount = clip0 + clip1 + clip2;
     int idxClip, idxNonClip, idxNext, idxPrev;
 
+    Vec3 triangleNormal = {
+        (triangle->vertices[0].pos.x + triangle->vertices[1].pos.x + triangle->vertices[2].pos.x) / 3,
+        (triangle->vertices[0].pos.y + triangle->vertices[1].pos.y + triangle->vertices[2].pos.y) / 3,
+        (triangle->vertices[0].pos.z + triangle->vertices[1].pos.z + triangle->vertices[2].pos.z) / 3,
+    };
+    triangleNormal = RotateVec3(triangleNormal, obj->rotation.x, obj->rotation.y, obj->rotation.z);
+    Vec3 lightDirection = {1, -2,3};
+
+    Normalize(&triangleNormal);
+    Normalize(&lightDirection);
+
+    float lightValue = 0.3 + 0.7 * (DotProduct(triangleNormal,lightDirection) / 2 + 0.5);
+
     switch (clipCount) {
         case 0:
-            ScanConversion(cc[0], cc[1], cc[2], depthBuffer, buffer, wireframeMode, width, height);
+            ScanConversion(cc[0], cc[1], cc[2], depthBuffer, buffer, wireframeMode, width, height, lightValue);
             break;
         case 1:
             idxClip = (clip0 == 1) ? 0 : (clip1 == 1) ? 1 : 2;
@@ -91,8 +106,8 @@ void RenderTriangle(Triangle *triangle, Object *obj, Camera *cam, float *depthBu
             ClipCoords clipPointEdgeA = Lerp(cc[idxClip], cc[idxNext], fracA);
             ClipCoords clipPointEdgeB = Lerp(cc[idxClip], cc[idxPrev], fracB);
 
-            ScanConversion(clipPointEdgeB, clipPointEdgeA, cc[idxPrev], depthBuffer, buffer, wireframeMode, width, height);
-            ScanConversion(clipPointEdgeA, cc[idxNext], cc[idxPrev], depthBuffer, buffer, wireframeMode, width, height);
+            ScanConversion(clipPointEdgeB, clipPointEdgeA, cc[idxPrev], depthBuffer, buffer, wireframeMode, width, height, lightValue);
+            ScanConversion(clipPointEdgeA, cc[idxNext], cc[idxPrev], depthBuffer, buffer, wireframeMode, width, height, lightValue);
             break;
         case 2:
             idxNonClip = (clip0 == 0) ? 0 : (clip1 == 0) ? 1 : 2;
@@ -105,7 +120,7 @@ void RenderTriangle(Triangle *triangle, Object *obj, Camera *cam, float *depthBu
             clipPointEdgeA = Lerp(cc[idxNonClip], cc[idxNext], fracA);
             clipPointEdgeB = Lerp(cc[idxNonClip], cc[idxPrev], fracB);
 
-            ScanConversion(clipPointEdgeB, cc[idxNonClip], clipPointEdgeA, depthBuffer, buffer, wireframeMode, width, height);
+            ScanConversion(clipPointEdgeB, cc[idxNonClip], clipPointEdgeA, depthBuffer, buffer, wireframeMode, width, height, lightValue);
             break;
         case 3:
             return;
