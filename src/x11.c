@@ -1,5 +1,7 @@
 #include "../include/x11.h"
 #include "../include/math-utils.h"
+#include <X11/X.h>
+#include <X11/Xlib.h>
 
 static Display *display;
 static int screen;
@@ -30,13 +32,16 @@ void OpenX11Window() {
 
     gc = XCreateGC(display, window, 0, NULL);
 
-    XSelectInput(display, window, KeyPressMask | StructureNotifyMask);
+    XSelectInput(display, window, KeyPressMask | StructureNotifyMask | PointerMotionMask);
 
     XWindowChanges changes;
     changes.width = 640;
     changes.height = 480;
     changes.stack_mode = Above;
+
     XConfigureWindow(display, window, CWWidth | CWHeight | CWStackMode, &changes);
+
+    XGrabPointer(display, window, 1, PointerMotionMask, GrabModeAsync, GrabModeAsync, None, None, CurrentTime);
 }
 
 void CloseX11Window() {
@@ -75,6 +80,15 @@ int X11Input(Camera *cam, Event *ev, int *width, int *height) {
             *height = event.xconfigure.height;
 
             resized = 1;
+        }
+        else if (event.type == MotionNotify) {
+            int dx = event.xmotion.x - (*width / 2);
+            int dy = event.xmotion.y - (*height / 2);
+
+            if (dx != 0 || dy != 0) {
+                cam->yaw -= dx * cam->rotationSpeed;
+                cam->pitch -= dy * cam->rotationSpeed;
+            }
         }
         else if (event.type == KeyPress) {
             KeySym key = XLookupKeysym(&event.xkey, 0);
@@ -125,6 +139,8 @@ int X11Input(Camera *cam, Event *ev, int *width, int *height) {
             }
         }
     }
+
+    XWarpPointer(display, None, window, 0, 0, 0, 0, *width / 2, *height / 2);
 
     return resized;
 }

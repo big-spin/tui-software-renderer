@@ -108,8 +108,16 @@ int main(int argc, char *argv[]) {
         0.0,
         0.0,
         0.5,
-        2.0,
     };
+
+    if (backend == Term) {
+        cam.rotationSpeed = 2.0;
+    }
+    #ifndef NO_X11
+    else {
+        cam.rotationSpeed = 0.01;
+    }
+    #endif
 
     Event ev;
     ev.quit = 0;
