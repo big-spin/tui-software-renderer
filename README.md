@@ -83,17 +83,17 @@ int sceneSize = LoadSceneFromFile(argv[1], &scene, funcs, 1);
 ### Example scene
 
 ```
-LOAD data/cars/Car4.obj
-LOAD data/cars/Car5.obj
-LOAD data/cars/Car6.obj
+LOAD data/desk/CrtMonitor.obj
 
-MOVE 0 -8/0/-2
-MOVE 1 0/0/-2
-MOVE 2 8/0/-2
+MOVE 0 0/0/-8.5
+ROTATE 0 0/-90/-90
+SCALE 0 0.03/0.03/0.03
 
-ROTATE 1 0/90/0
+LOAD data/desk/desk.obj
 
-ASSIGN 1 Spin
+MOVE 1 0/-2.25/-8
+ROTATE 1 0/90/90
+SCALE 1 0.03/0.03/0.03
 ```
 
 ## Useful links

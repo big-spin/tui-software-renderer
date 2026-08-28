@@ -1,4 +1,6 @@
 #include "../include/obj-loader.h"
+#include <stdio.h>
+#include <string.h>
 
 int LoadMeshFromFile(char *path, Triangle *mesh) {
     Vec3 positions[1000];
@@ -56,6 +58,56 @@ int LoadMeshFromFile(char *path, Triangle *mesh) {
                 p2, n2, t2,
                 p3, n3, t3,
                 p4, n4, t4;
+
+            if (strstr(data, "//")) {
+                int out = sscanf(data, " f %d//%d %d//%d %d//%d %d//%d", &p1, &n1, &p2, &n2, &p3, &n3, &p4, &n4);
+
+                if (out != 8) {
+                    out = sscanf(data, " f %d//%d %d//%d %d//%d", &p1, &n1, &p2, &n2, &p3, &n3);
+
+                    if (out != 6) {
+                        printf("Error loading obj file: (invalid face at: '%s:%d')\n", path, line);
+                        return 0;
+                    }
+
+                    mesh[triangleCount].vertices[0].pos = positions[p1 - 1];
+                    mesh[triangleCount].vertices[0].nor = normals[n1 - 1];
+
+                    mesh[triangleCount].vertices[1].pos = positions[p2 - 1];
+                    mesh[triangleCount].vertices[1].nor = normals[n2 - 1];
+
+                    mesh[triangleCount].vertices[2].pos = positions[p3 - 1];
+                    mesh[triangleCount].vertices[2].nor = normals[n3 - 1];
+
+                    triangleCount++;
+
+                    continue;
+                }
+
+                mesh[triangleCount].vertices[0].pos = positions[p1 - 1];
+                mesh[triangleCount].vertices[0].nor = normals[n1 - 1];
+
+                mesh[triangleCount].vertices[1].pos = positions[p2 - 1];
+                mesh[triangleCount].vertices[1].nor = normals[n2 - 1];
+
+                mesh[triangleCount].vertices[2].pos = positions[p3 - 1];
+                mesh[triangleCount].vertices[2].nor = normals[n3 - 1];
+
+                triangleCount++;
+
+                mesh[triangleCount].vertices[0].pos = positions[p1 - 1];
+                mesh[triangleCount].vertices[0].nor = normals[n1 - 1];
+
+                mesh[triangleCount].vertices[1].pos = positions[p3 - 1];
+                mesh[triangleCount].vertices[1].nor = normals[n3 - 1];
+
+                mesh[triangleCount].vertices[2].pos = positions[p4 - 1];
+                mesh[triangleCount].vertices[2].nor = normals[n4 - 1];
+
+                triangleCount++;
+
+                continue;
+            }
 
             int out = sscanf(data, " f %d/%d/%d %d/%d/%d %d/%d/%d %d/%d/%d", &p1, &t1, &n1, &p2, &t2, &n2, &p3, &t3, &n3, &p4, &t4, &n4);
 

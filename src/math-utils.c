@@ -1,4 +1,5 @@
 #include "../include/math-utils.h"
+#include <math.h>
 
 Vec3 MatrixVec3Multiplication(Vec3 vec, int matrixSize, float  matrix[matrixSize][matrixSize]) {
     Vec3 ret = { 0, 0, 0 };
@@ -56,6 +57,150 @@ Vec4 MatrixVec4Multiplication(Vec4 vec, int matrixSize, float matrix[matrixSize]
     );
 
     return ret;
+}
+
+mat3 Matrix3Multiplication(mat3 mat1, mat3 mat2) {
+    mat3 out = {
+        {
+            {
+                // row 0
+                mat1.data[0][0] * mat2.data[0][0] +
+                mat1.data[0][1] * mat2.data[1][0] +
+                mat1.data[0][2] * mat2.data[2][0],
+
+                mat1.data[0][0] * mat2.data[0][1] +
+                mat1.data[0][1] * mat2.data[1][1] +
+                mat1.data[0][2] * mat2.data[2][1],
+
+                mat1.data[0][0] * mat2.data[0][2] +
+                mat1.data[0][1] * mat2.data[1][2] +
+                mat1.data[0][2] * mat2.data[2][2],
+            },
+            {
+                // row 1
+                mat1.data[1][0] * mat2.data[0][0] +
+                mat1.data[1][1] * mat2.data[1][0] +
+                mat1.data[1][2] * mat2.data[2][0],
+
+                mat1.data[1][0] * mat2.data[0][1] +
+                mat1.data[1][1] * mat2.data[1][1] +
+                mat1.data[1][2] * mat2.data[2][1],
+
+                mat1.data[1][0] * mat2.data[0][2] +
+                mat1.data[1][1] * mat2.data[1][2] +
+                mat1.data[1][2] * mat2.data[2][2],
+            },
+            {
+                // row 2
+                mat1.data[2][0] * mat2.data[0][0] +
+                mat1.data[2][1] * mat2.data[1][0] +
+                mat1.data[2][2] * mat2.data[2][0],
+
+                mat1.data[2][0] * mat2.data[0][1] +
+                mat1.data[2][1] * mat2.data[1][1] +
+                mat1.data[2][2] * mat2.data[2][1],
+
+                mat1.data[2][0] * mat2.data[0][2] +
+                mat1.data[2][1] * mat2.data[1][2] +
+                mat1.data[2][2] * mat2.data[2][2],
+            }
+        }
+    };
+
+    return out;
+}
+
+mat4 Matrix4Multiplication(mat4 mat1, mat4 mat2) {
+    mat4 out = {
+        {
+            {
+                mat1.data[0][0] * mat2.data[0][0] +
+                mat1.data[0][1] * mat2.data[1][0] +
+                mat1.data[0][2] * mat2.data[2][0] +
+                mat1.data[0][3] * mat2.data[3][0],
+
+                mat1.data[0][0] * mat2.data[0][1] +
+                mat1.data[0][1] * mat2.data[1][1] +
+                mat1.data[0][2] * mat2.data[2][1] +
+                mat1.data[0][3] * mat2.data[3][1],
+
+                mat1.data[0][0] * mat2.data[0][2] +
+                mat1.data[0][1] * mat2.data[1][2] +
+                mat1.data[0][2] * mat2.data[2][2] +
+                mat1.data[0][3] * mat2.data[3][2],
+
+                mat1.data[0][0] * mat2.data[0][3] +
+                mat1.data[0][1] * mat2.data[1][3] +
+                mat1.data[0][2] * mat2.data[2][3] +
+                mat1.data[0][3] * mat2.data[3][3],
+            },
+            {
+                mat1.data[1][0] * mat2.data[0][0] +
+                mat1.data[1][1] * mat2.data[1][0] +
+                mat1.data[1][2] * mat2.data[2][0] +
+                mat1.data[1][3] * mat2.data[3][0],
+
+                mat1.data[1][0] * mat2.data[0][1] +
+                mat1.data[1][1] * mat2.data[1][1] +
+                mat1.data[1][2] * mat2.data[2][1] +
+                mat1.data[1][3] * mat2.data[3][1],
+
+                mat1.data[1][0] * mat2.data[0][2] +
+                mat1.data[1][1] * mat2.data[1][2] +
+                mat1.data[1][2] * mat2.data[2][2] +
+                mat1.data[1][3] * mat2.data[3][2],
+
+                mat1.data[1][0] * mat2.data[0][3] +
+                mat1.data[1][1] * mat2.data[1][3] +
+                mat1.data[1][2] * mat2.data[2][3] +
+                mat1.data[1][3] * mat2.data[3][3],
+            },
+            {
+                mat1.data[2][0] * mat2.data[0][0] +
+                mat1.data[2][1] * mat2.data[1][0] +
+                mat1.data[2][2] * mat2.data[2][0] +
+                mat1.data[2][3] * mat2.data[3][0],
+
+                mat1.data[2][0] * mat2.data[0][1] +
+                mat1.data[2][1] * mat2.data[1][1] +
+                mat1.data[2][2] * mat2.data[2][1] +
+                mat1.data[2][3] * mat2.data[3][1],
+
+                mat1.data[2][0] * mat2.data[0][2] +
+                mat1.data[2][1] * mat2.data[1][2] +
+                mat1.data[2][2] * mat2.data[2][2] +
+                mat1.data[2][3] * mat2.data[3][2],
+
+                mat1.data[2][0] * mat2.data[0][3] +
+                mat1.data[2][1] * mat2.data[1][3] +
+                mat1.data[2][2] * mat2.data[2][3] +
+                mat1.data[2][3] * mat2.data[3][3],
+            },
+            {
+                mat1.data[3][0] * mat2.data[0][0] +
+                mat1.data[3][1] * mat2.data[1][0] +
+                mat1.data[3][2] * mat2.data[2][0] +
+                mat1.data[3][3] * mat2.data[3][0],
+
+                mat1.data[3][0] * mat2.data[0][1] +
+                mat1.data[3][1] * mat2.data[1][1] +
+                mat1.data[3][2] * mat2.data[2][1] +
+                mat1.data[3][3] * mat2.data[3][1],
+
+                mat1.data[3][0] * mat2.data[0][2] +
+                mat1.data[3][1] * mat2.data[1][2] +
+                mat1.data[3][2] * mat2.data[2][2] +
+                mat1.data[3][3] * mat2.data[3][2],
+
+                mat1.data[3][0] * mat2.data[0][3] +
+                mat1.data[3][1] * mat2.data[1][3] +
+                mat1.data[3][2] * mat2.data[2][3] +
+                mat1.data[3][3] * mat2.data[3][3],
+            }
+        }
+    };
+
+    return out;
 }
 
 Vec3 AddVec3(Vec3 vec1, Vec3 vec2) {

@@ -48,9 +48,9 @@ int LoadSceneFromFile(char *path, Object **scene, NameFunctionPair *funcs, int f
         }
         else if (strcmp(split, "MOVE") == 0) {
             int idx;
-            int x, y, z;
+            float x, y, z;
 
-            int out = sscanf(data, "MOVE %d %d/%d/%d", &idx, &x, &y, &z);
+            int out = sscanf(data, "MOVE %d %f/%f/%f", &idx, &x, &y, &z);
             if (out != 4) {
                 printf("Error loading scene: (invalid command at '%s:%d')\n", path, line);
                 return 0;
@@ -64,9 +64,9 @@ int LoadSceneFromFile(char *path, Object **scene, NameFunctionPair *funcs, int f
         }
         else if (strcmp(split, "ROTATE") == 0) {
             int idx;
-            int x, y, z;
+            float x, y, z;
 
-            int out = sscanf(data, "ROTATE %d %d/%d/%d", &idx, &x, &y, &z);
+            int out = sscanf(data, "ROTATE %d %f/%f/%f", &idx, &x, &y, &z);
             if (out != 4) {
                 printf("Error loading scene: (invalid command at '%s:%d')\n", path, line);
                 return 0;
@@ -80,9 +80,9 @@ int LoadSceneFromFile(char *path, Object **scene, NameFunctionPair *funcs, int f
         }
         else if (strcmp(split, "SCALE") == 0) {
             int idx;
-            int x, y, z;
+            float x, y, z;
 
-            int out = sscanf(data, "SCALE %d %d/%d/%d", &idx, &x, &y, &z);
+            int out = sscanf(data, "SCALE %d %f/%f/%f", &idx, &x, &y, &z);
             if (out != 4) {
                 printf("Error loading scene: (invalid command at '%s:%d')\n", path, line);
                 return 0;

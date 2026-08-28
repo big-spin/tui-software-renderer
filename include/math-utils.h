@@ -9,6 +9,10 @@
 
 Vec3 MatrixVec3Multiplication(Vec3 vec, int matrixSize, float matrix[matrixSize][matrixSize]);
 
+mat3 Matrix3Multiplication(mat3 mat1, mat3 mat2);
+
+mat4 Matrix4Multiplication(mat4 mat1, mat4 mat2);
+
 Vec4 MatrixVec4Multiplication(Vec4 vec, int matrixSize, float matrix[matrixSize][matrixSize]);
 
 Vec3 AddVec3(Vec3 vec1, Vec3 vec2);

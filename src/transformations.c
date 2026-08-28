@@ -1,37 +1,49 @@
 #include "../include/custom-types.h"
 #include "../include/math-utils.h"
 
+mat3 RotationX(float angle) {
+    return (mat3) {
+        {
+            {1, 0, 0},
+            {0, cos(DEG2RAD(angle)), - sin(DEG2RAD(angle))},
+            {0, sin(DEG2RAD(angle)), cos(DEG2RAD(angle))},
+        },
+    };
+}
+
+mat3 RotationY(float angle) {
+    return (mat3) {
+        {
+            {cos(DEG2RAD(angle)), 0, sin(DEG2RAD(angle))},
+            {0, 1, 0},
+            {- sin(DEG2RAD(angle)), 0, cos(DEG2RAD(angle))},
+        },
+    };
+}
+
+mat3 RotationZ(float angle) {
+    return (mat3) {
+        {
+            {cos(DEG2RAD(angle)), - sin(DEG2RAD(angle)), 0},
+            {sin(DEG2RAD(angle)), cos(DEG2RAD(angle)), 0},
+            {0, 0, 1 },
+        },
+    };
+}
+
 // Rotate a vertex by angle around an axis (x, y or z).
 Vertex RotateVertexAroundAxis(Vertex vx, float angle, RotationAxis axis) {
     Vertex out = vx;
 
     switch (axis) {
         case X_AXIS:
-            out.pos = MatrixVec3Multiplication(vx.pos, 3, 
-                (float[3][3]){
-                    {1, 0, 0},
-                    {0, cos(DEG2RAD(angle)), - sin(DEG2RAD(angle))},
-                    {0, sin(DEG2RAD(angle)), cos(DEG2RAD(angle))},
-                }
-            );
+            out.pos = MatrixVec3Multiplication(vx.pos, 3, RotationX(angle).data);
             break;
         case Y_AXIS:
-            out.pos = MatrixVec3Multiplication(vx.pos, 3, 
-                (float[3][3]){
-                    {cos(DEG2RAD(angle)), 0, sin(DEG2RAD(angle))},
-                    {0, 1, 0},
-                    {- sin(DEG2RAD(angle)), 0, cos(DEG2RAD(angle))},
-                }
-            );
+            out.pos = MatrixVec3Multiplication(vx.pos, 3, RotationY(angle).data);
             break;
         case Z_AXIS:
-            out.pos = MatrixVec3Multiplication(vx.pos, 3, 
-                (float[3][3]){
-                    {cos(DEG2RAD(angle)), - sin(DEG2RAD(angle)), 0},
-                    {sin(DEG2RAD(angle)), cos(DEG2RAD(angle)), 0},
-                    {0, 0, 1 },
-                }
-            );
+            out.pos = MatrixVec3Multiplication(vx.pos, 3, RotationZ(angle).data);
             break;
     }
 
@@ -40,7 +52,17 @@ Vertex RotateVertexAroundAxis(Vertex vx, float angle, RotationAxis axis) {
 
 // Rotate a vertex around all axis at once.
 Vertex RotateVertex(Vertex vx, float x, float y, float z) {
-    return RotateVertexAroundAxis(RotateVertexAroundAxis(RotateVertexAroundAxis(vx, z, Z_AXIS), y, Y_AXIS), x, X_AXIS);
+    // return RotateVertexAroundAxis(RotateVertexAroundAxis(RotateVertexAroundAxis(vx, y, Y_AXIS), z, Z_AXIS), x, X_AXIS);
+    mat3 rotation = Matrix3Multiplication(
+        Matrix3Multiplication(RotationZ(z), RotationY(y)),
+        RotationX(x)
+    );
+
+    Vertex out = vx;
+
+    out.pos = MatrixVec3Multiplication(out.pos, 3, rotation.data);
+
+    return out;
 }
 
 // Move a vertex in all 3 axis at once.
@@ -64,25 +86,52 @@ Vertex ScaleVertex(Vertex vx, float x, float y, float z) {
 
 // Move and rotate a vertex based on it's position and rotation.
 Vertex LocalTransform(Vertex vx, Object obj) {
-    Vertex scaled = ScaleVertex(vx, obj.scale.x, obj.scale.y, obj.scale.z);
-    Vertex rotated = RotateVertex(scaled, obj.rotation.x, obj.rotation.y, obj.rotation.z);
+    Vertex scaled = ScaleVertex(
+        vx,
+        obj.scale.x,
+        obj.scale.y,
+        obj.scale.z
+    );
+    Vertex rotated = RotateVertex(
+        scaled,
+        obj.rotation.x,
+        obj.rotation.y,
+        obj.rotation.z
+    );
+
     return TranslateVertex(rotated, obj.position.x, obj.position.y, obj.position.z);
 }
 
 // Move and rotate a vertex based on the camera's position, yaw and pitch.
 Vertex ViewTransfrom(Vertex vx, Camera cam) {
-    Vertex moved = TranslateVertex(vx, -cam.pos.x, -cam.pos.y, -cam.pos.z);
-    return RotateVertex(moved, -cam.pitch, -cam.yaw, 0.0);
+    Vertex moved = TranslateVertex(
+        vx,
+        -cam.pos.x,
+        -cam.pos.y,
+        -cam.pos.z
+    );
+    
+    moved = RotateVertexAroundAxis(moved, -cam.yaw, Y_AXIS);
+    moved = RotateVertexAroundAxis(moved, -cam.pitch, X_AXIS);
+
+    return moved;
 }
 
 // Multiply vertex coordinates by perspective matrix -> return clip coordinates.
 ClipCoords ClipSpaceTransform(Vertex vx, float perspectiveMatrix[4][4]) {
     ClipCoords out;
-    Vec4 result = MatrixVec4Multiplication((Vec4){ vx.pos.x, vx.pos.y, vx.pos.z, 1.0}, 4, perspectiveMatrix);
+
+    Vec4 result = MatrixVec4Multiplication(
+        (Vec4){ vx.pos.x, vx.pos.y, vx.pos.z, 1.0},
+        4,
+        perspectiveMatrix
+    );
+
     out.x = result.x;
     out.y = result.y;
     out.z = result.z;
     out.w = result.w;
+
     return out;
 }
 
