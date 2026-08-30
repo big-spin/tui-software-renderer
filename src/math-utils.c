@@ -1,5 +1,4 @@
 #include "../include/math-utils.h"
-#include <math.h>
 
 Vec3 MatrixVec3Multiplication(Vec3 vec, int matrixSize, float  matrix[matrixSize][matrixSize]) {
     Vec3 ret = { 0, 0, 0 };

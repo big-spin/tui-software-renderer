@@ -8,8 +8,8 @@ X11LIB = -lX11
 
 DEBUGFLAGS = -g -fsanitize=address -fno-omit-frame-pointer 
 
-SRC = src/math-utils.c src/term.c src/x11.c src/obj-loader.c src/scene-loader.c src/transformations.c src/render.c src/main.c
-SRCNOX11 = src/math-utils.c src/term.c src/obj-loader.c src/scene-loader.c src/transformations.c src/render.c src/main.c
+SRC = src/math-utils.c src/keyboard.c src/term.c src/x11.c src/obj-loader.c src/scene-loader.c src/transformations.c src/render.c src/main.c
+SRCNOX11 = src/math-utils.c src/keyboard.c src/term.c src/obj-loader.c src/scene-loader.c src/transformations.c src/render.c src/main.c
 
 .PHONY: build debug clean no-x11
 

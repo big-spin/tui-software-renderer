@@ -1,7 +1,7 @@
 #ifndef TERM_H
 #define TERM_H
 
-#include "../include/custom-types.h"
+#include "custom-types.h"
 
 int TermWidth();
 
@@ -21,6 +21,6 @@ void ClearBuffer(FrameBuffer *buf);
 
 void PresentBuffer(FrameBuffer *buf);
 
-void TermInput(Camera *cam, Event *ev);
+int TermInput(Camera *cam, Event *ev, int *width, int *height);
 
 #endif

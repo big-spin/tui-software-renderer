@@ -1,12 +1,11 @@
 #include "../include/term.h"
-#include "../include/math-utils.h"
+#include "../include/render.h"
+#include "../include/keyboard.h"
 
 void EnableRawMode(struct termios *original) {
     struct termios term = *original;
 
     term.c_lflag &= ~(ECHO | ICANON | ISIG);
-    term.c_cc[VMIN] = 0;
-    term.c_cc[VTIME] = 1;
     tcsetattr(STDIN_FILENO, TCSANOW, &term);
 }
 
@@ -34,6 +33,8 @@ void InitTerm(struct termios *original) {
     write(STDOUT_FILENO, "\x1B[H", 3);
     write(STDOUT_FILENO, "\x1B[2J", 4);
     write(STDOUT_FILENO, "\x1B[?25l", 6);
+
+    UpdatePerspectiveMatrix(TermWidth(), TermHeight());
 }
 
 void ShutdownTerm(struct termios *original) {
@@ -56,7 +57,7 @@ char LightLevelToChar(uint32_t light) {
     int lightValue = (int)(light / 1677721);
 
     if (lightValue < 0) lightValue = 0;
-    if (lightValue > 10) lightValue = 10;
+    if (lightValue > 9) lightValue = 9;
 
     char ramp[10] = {'.', ':', '-', '=', '+', '*', '#', '%', '@', '$'};
 
@@ -73,53 +74,81 @@ void PresentBuffer(FrameBuffer *buf) {
     write(STDOUT_FILENO, data, (buf->width * buf->height));
 }
 
-void TermInput(Camera *cam, Event *ev) {
-    char out[3];
+int TermInput(Camera *cam, Event *ev, int *width, int *height) {
+    int resized = 0;
 
-    if(read(STDIN_FILENO, out, sizeof(char) * 3)) {
-        Vec3 forward = RotateVec3AroundAxis((Vec3){0.0, 0.0, -cam->speed}, cam->yaw, Y_AXIS);
-        Vec3 backward = RotateVec3AroundAxis((Vec3){0.0, 0.0, cam->speed}, cam->yaw, Y_AXIS);
-        Vec3 right = RotateVec3AroundAxis((Vec3){cam->speed, 0.0, 0.0}, cam->yaw, Y_AXIS);
-        Vec3 left = RotateVec3AroundAxis((Vec3){-cam->speed, 0.0, 0.0}, cam->yaw, Y_AXIS);
+    if (*width != TermWidth() || *height != TermHeight()) {
+        *width = TermWidth();
+        *height = TermHeight();
 
-        switch (out[0]) {
+        UpdatePerspectiveMatrix(*width, *height);
+
+        resized = 1;
+    }
+
+    ResetKeyboard(&ev->keys);
+
+    struct pollfd pollCall = {
+        STDIN_FILENO,
+        POLLIN,
+        POLLIN,
+    };
+
+    int result = poll(&pollCall, 1, 1);
+    if (result < 0) {
+        puts("Error polling STDIN_FILENO for input");
+        return -1;
+    } else if (result == 0 || !(pollCall.revents & POLLIN)) {
+        return resized;
+    }
+
+    char out;
+    ssize_t bytesRead = read(STDIN_FILENO, &out, sizeof(char) * 1);
+    if (bytesRead == -1) {
+        puts("Error reading STDIN_FILENO");
+        return -1;
+    }
+
+    if (bytesRead == 1) {
+        switch (out) {
             case 'q':
                 ev->quit = 1;
-                return;
+                break;
             case 'w':
-                cam->pos = AddVec3(cam->pos, forward);
-                return;
+                ev->keys.w = 1;
+                break;
             case 'a':
-                cam->pos = AddVec3(cam->pos, left);
-                return;
+                ev->keys.a = 1;
+                break;
             case 's':
-                cam->pos = AddVec3(cam->pos, backward);
-                return;
+                ev->keys.s = 1;
+                break;
             case 'd':
-                cam->pos = AddVec3(cam->pos, right);
-                return;
+                ev->keys.d = 1;
+                break;
             case 'r':
-                cam->pos.y += cam->speed;
-                return;
+                ev->keys.r = 1;
+                break;
             case 'f':
-                cam->pos.y -= cam->speed;
-                return;
+                ev->keys.f = 1;
+                break;
             case 'i':
-                cam->pitch += cam->rotationSpeed;
-                return;
+                ev->keys.i = 1;
+                break;
             case 'k':
-                cam->pitch -= cam->rotationSpeed;
-                return;
+                ev->keys.k = 1;
+                break;
             case 'j':
-                cam->yaw += cam->rotationSpeed;
-                return;
+                ev->keys.j = 1;
+                break;
             case 'l':
-                cam->yaw -= cam->rotationSpeed;
-                return;
+                ev->keys.l = 1;
+                break;
             case 'v':
-                if (ev->wireframeMode == 0) ev->wireframeMode = 1;
-                else ev->wireframeMode = 0;
-                return;
+                ev->keys.v = 1;
+                break;
         }
     }
+
+    return resized;
 }

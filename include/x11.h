@@ -1,7 +1,7 @@
 #ifndef X_11_H
 #define X_11_H
 
-#include "../include/custom-types.h"
+#include "custom-types.h"
 
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>

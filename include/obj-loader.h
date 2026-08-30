@@ -1,7 +1,7 @@
 #ifndef OBJ_LOADER_H
 #define OBJ_LOADER_H
 
-#include "../include/custom-types.h"
+#include "custom-types.h"
 
 int LoadMeshFromFile(char *path, Triangle *mesh);
 

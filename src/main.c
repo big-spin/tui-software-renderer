@@ -1,46 +1,15 @@
-#include "../include/math-utils.h"
 #include "../include/term.h"
 #include "../include/scene-loader.h"
 #include "../include/render.h"
+#include "../include/math-utils.h"
 
 #ifndef NO_X11
 #include "../include/x11.h" 
 #endif
 
-#define Z_NEAR 0.1f
-#define Z_FAR 10.0f
-
 struct termios original;
 
 int width, height;
-
-float perspectiveMatrix[4][4];
-
-void UpdatePerspectiveMatrix(void) {
-    float fov = 25.0 * PI / 180.0;
-    float aspect = (float)width / height;
-
-    float fy = 1.0 / tan(fov / 2.0);
-    float fx = fy / aspect;
-
-    float zNear = Z_NEAR;
-    float zFar = Z_FAR;
-
-    float clip1 = (zFar + zNear) / (zNear - zFar);
-    float clip2 = (2 * zFar * zNear) / (zNear - zFar);
-
-    memset(perspectiveMatrix, 0,16 * sizeof(float));
-
-    perspectiveMatrix[0][0] = fx;
-    perspectiveMatrix[1][1] = fy;
-    perspectiveMatrix[2][2] = clip1;
-    perspectiveMatrix[2][3] = clip2;
-    perspectiveMatrix[3][2] = -1.0;
-}
-
-void Spin(Object *obj, Event *ev) {
-    obj->rotation.y += 1;
-}
 
 int main(int argc, char *argv[]) {
     Backend backend = Term;
@@ -48,98 +17,57 @@ int main(int argc, char *argv[]) {
     if (argc < 2) {
         puts("No scene file provided\n");
         return 0;
-    }
-    else if(argc == 3 && strcmp(argv[2], "X11") == 0) {
-        backend = X11;
-    }
-
-    NameFunctionPair funcs[1] = {
-        {"Spin", Spin},
-    };
+    } else if (argc == 3 && strcmp(argv[2], "X11") == 0) backend = X11;
 
     Object *scene = NULL;
-    int sceneSize = LoadSceneFromFile(argv[1], &scene, funcs, 1);
+    int sceneSize = LoadSceneFromFile(argv[1], &scene, NULL, 0);
 
-    if (sceneSize == 0) {
-        return 1;
-    }
+    if (sceneSize == 0) return 1;
 
     if (backend == Term) {
         tcgetattr(STDIN_FILENO, &original);
         InitTerm(&original);
-
-        width = TermWidth();
-        height = TermHeight();
     }
     #ifndef NO_X11
-    else {
-        OpenX11Window();
-        width = 640;
-        height = 480;
-    }
+    else OpenX11Window();
     #endif
 
-    // Initialize perspective matrix
-    UpdatePerspectiveMatrix();
+    width = backend == Term ? TermWidth() : 640;
+    height = backend == Term ? TermHeight() : 480;
+
 
     FrameBuffer buffer;
-    buffer.data = malloc(width * height * sizeof(uint32_t));
 
-    buffer.width = TermWidth();
-    buffer.height = TermHeight();
-
-    #ifndef NO_X11
-    if (backend == X11) {
-        buffer.width = 640;
-        buffer.height = 480;
-
-        SetupXImage(&buffer, 640, 480);
-    }
-    #endif
+    buffer.width = width;
+    buffer.height = height;
+    buffer.data = malloc(buffer.width * buffer.height * sizeof(uint32_t));
 
     float *depthBuffer = malloc(width * height * sizeof(float));
 
-    WindowCoords finalWC[3];
-    BoundingBox box;
+    #ifndef NO_X11
+    if (backend == X11) SetupXImage(&buffer, 640, 480);
+    #endif
 
     // Setup camera
     Camera cam = { 
         { 0.0, 0.0, 0.0 },
         0.0,
         0.0,
-        0.5,
+        5.0,
+        20.0,
     };
-
-    if (backend == Term) {
-        cam.rotationSpeed = 2.0;
-    }
-    #ifndef NO_X11
-    else {
-        cam.rotationSpeed = 0.01;
-    }
-    #endif
 
     Event ev;
     ev.quit = 0;
     ev.wireframeMode = 0;
 
+    struct timespec deltaTimeClock;
+    double deltaTime;
+
+    clock_gettime(CLOCK_MONOTONIC, &deltaTimeClock);
+
     // Main loop
     while (ev.quit != 1) {
-        // Update width and height values if necessary and recalculate everything that depends on those values
-        if (backend == Term && (width != TermWidth() || height != TermHeight())) {
-            width = TermWidth();
-            height = TermHeight();
-
-            UpdatePerspectiveMatrix();
-
-            depthBuffer = realloc(depthBuffer, width * height * sizeof(float));
-
-            buffer.data = realloc(buffer.data, width * height * sizeof(uint32_t));
-            buffer.width = width;
-            buffer.height = height;
-            puts("Resizing terminal");
-        }
-
         // Clear frame and depth buffers
         ClearBuffer(&buffer);
         ClearDepthBuffer(depthBuffer, width, height);
@@ -152,38 +80,78 @@ int main(int argc, char *argv[]) {
             }
 
             for (int j = 0; j < scene[i].triangleCount; j++) {
-                RenderTriangle(&scene[i].mesh[j], &scene[i], &cam, depthBuffer, &buffer, perspectiveMatrix, ev.wireframeMode, width, height);
+                RenderTriangle(&scene[i].mesh[j], &scene[i], &cam, depthBuffer, &buffer, ev.wireframeMode, width, height);
             }
         }
 
-        // Present buffer
-        if (backend == Term) PresentBuffer(&buffer);
+        int result = 0;
+
+        if (backend == Term) {
+            PresentBuffer(&buffer);
+            result = TermInput(&cam, &ev, &width, &height);
+        }
         #ifndef NO_X11
-        else if (backend == X11) PresentBufferX11(&buffer);
+        else {
+            PresentBufferX11(&buffer);
+            result = X11Input(&cam, &ev, &width, &height);
+        }
         #endif
 
-        // Input handling and camera movement + rotation
-        if (backend == Term) TermInput(&cam, &ev);
-        #ifndef NO_X11
-        else if (X11Input(&cam, &ev, &width, &height) == 1) {
-            UpdatePerspectiveMatrix();
+        if (result == -1) return 1;
 
+        if (result == 1) {
             depthBuffer = realloc(depthBuffer, width * height * sizeof(float));
 
             buffer.data = realloc(buffer.data, width * height * sizeof(uint32_t));
             buffer.width = width;
             buffer.height = height;
 
-            SetupXImage(&buffer, width, height);
+            #ifndef NO_X11
+            if (backend == X11) SetupXImage(&buffer, width, height);
+            #endif
         }
-        #endif
+
+        Vec3 forward = RotateVec3AroundAxis((Vec3){0.0, 0.0, -cam.speed * deltaTime}, cam.yaw, Y_AXIS);
+        Vec3 backward = RotateVec3AroundAxis((Vec3){0.0, 0.0, cam.speed * deltaTime}, cam.yaw, Y_AXIS);
+        Vec3 right = RotateVec3AroundAxis((Vec3){cam.speed * deltaTime, 0.0, 0.0}, cam.yaw, Y_AXIS);
+        Vec3 left = RotateVec3AroundAxis((Vec3){-cam.speed * deltaTime, 0.0, 0.0}, cam.yaw, Y_AXIS);
+
+        if (ev.keys.w == 1) cam.pos = AddVec3(cam.pos, forward);
+        if (ev.keys.a == 1) cam.pos = AddVec3(cam.pos, left);
+        if (ev.keys.s == 1) cam.pos = AddVec3(cam.pos, backward);
+        if (ev.keys.d == 1) cam.pos = AddVec3(cam.pos, right);
+
+        if (ev.keys.r == 1) cam.pos.y += cam.speed * deltaTime;
+        if (ev.keys.f == 1) cam.pos.y -= cam.speed * deltaTime;
+
+        if (ev.keys.i == 1) cam.pitch += cam.rotationSpeed * deltaTime;
+        if (ev.keys.j == 1) cam.yaw += cam.rotationSpeed * deltaTime;
+        if (ev.keys.k == 1) cam.pitch -= cam.rotationSpeed * deltaTime;
+        if (ev.keys.l == 1) cam.yaw -= cam.rotationSpeed * deltaTime;
+
+        if (ev.keys.v == 1) {
+            if (ev.wireframeMode == 1) ev.wireframeMode = 0;
+            else ev.wireframeMode = 1;
+        }
 
         ev.frameNumber++;
+
+        struct timespec now;
+        clock_gettime(CLOCK_MONOTONIC, &now);
+
+        deltaTime = (double)(now.tv_sec - deltaTimeClock.tv_sec) + (double)(now.tv_nsec - deltaTimeClock.tv_nsec) / 1000000000;
+
+        deltaTimeClock = now;
+
+        #ifndef NO_X11
+        if (backend == X11) printf("%fms / %ffps (frame: %d)\n", deltaTime*1000, 1/deltaTime, ev.frameNumber);
+        #endif
     }
 
     // Final cleanup
     if (backend == Term) {
         ShutdownTerm(&original);
+        free(buffer.data);
     }
     #ifndef NO_X11
     else CloseX11Window();

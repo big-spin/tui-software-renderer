@@ -1,6 +1,4 @@
 #include "../include/obj-loader.h"
-#include <stdio.h>
-#include <string.h>
 
 int LoadMeshFromFile(char *path, Triangle *mesh) {
     Vec3 positions[1000];
@@ -35,16 +33,14 @@ int LoadMeshFromFile(char *path, Triangle *mesh) {
                     return 0;
                 }
                 vertexCount++;
-            }
-            else if (data[1] == 'n') {
+            } else if (data[1] == 'n') {
                 int out = sscanf(data, " vn %f %f %f", &normals[normalCount].x, &normals[normalCount].y, &normals[normalCount].z);
                 if (out != 3) {
                     printf("Error loading obj file: (invalid vertex normals at: '%s:%d')\n", path, line);
                     return 0;
                 }
                 normalCount++;
-            }
-            else if (data[1] == 't') {
+            } else if (data[1] == 't') {
                 int out = sscanf(data, " vt %f %f", &textures[textureCount].x, &textures[textureCount].y);
                 if (out != 2) {
                     printf("Error loading obj file: (invalid vertex textures at: '%s:%d')\n", path, line);
@@ -52,8 +48,7 @@ int LoadMeshFromFile(char *path, Triangle *mesh) {
                 }
                 textureCount++;
             }
-        }
-        else if (data[0] == 'f') {
+        } else if (data[0] == 'f') {
             int p1, n1, t1,
                 p2, n2, t2,
                 p3, n3, t3,

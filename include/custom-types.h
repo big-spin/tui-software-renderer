@@ -9,6 +9,8 @@
 #include <termios.h>
 #include <sys/ioctl.h>
 #include <math.h>
+#include <time.h>
+#include <poll.h>
 
 typedef struct {
     float x1;
@@ -66,6 +68,8 @@ typedef struct {
     int j;
     int k;
     int l;
+
+    int v;
 } Keyboard;
 
 typedef struct {
@@ -126,5 +130,11 @@ typedef struct {
 typedef struct {
     float data[4][4];
 } mat4;
+
+typedef enum {
+    Info,
+    Warning,
+    Error,
+} LogType;
 
 #endif

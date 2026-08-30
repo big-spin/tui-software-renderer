@@ -2,19 +2,41 @@
 #include "../include/transformations.h"
 #include "../include/math-utils.h"
 #include "../include/term.h"
-#include <stdint.h>
 #include "../include/render.h"
 
 #define Z_NEAR 0.5f
 #define Z_FAR 10.0f
 
-void ScanConversion(ClipCoords c0, ClipCoords c1, ClipCoords c2, float *depthBuffer, FrameBuffer *buf, int wireframeMode, int width, int height) {
-    BoundingBox box;
+float perspectiveMatrix[4][4];
 
+void UpdatePerspectiveMatrix(int width, int height) {
+    float fov = 25.0 * PI / 180.0;
+    float aspect = (float)width / height;
+
+    float fy = 1.0 / tan(fov / 2.0);
+    float fx = fy / aspect;
+
+    float zNear = Z_NEAR;
+    float zFar = Z_FAR;
+
+    float clip1 = (zFar + zNear) / (zNear - zFar);
+    float clip2 = (2 * zFar * zNear) / (zNear - zFar);
+
+    memset(perspectiveMatrix, 0,16 * sizeof(float));
+
+    perspectiveMatrix[0][0] = fx;
+    perspectiveMatrix[1][1] = fy;
+    perspectiveMatrix[2][2] = clip1;
+    perspectiveMatrix[2][3] = clip2;
+    perspectiveMatrix[3][2] = -1.0;
+}
+
+void ScanConversion(ClipCoords c0, ClipCoords c1, ClipCoords c2, float *depthBuffer, FrameBuffer *buf, int wireframeMode, int width, int height) {
     WindowCoords wc0 = WindowTransformation(NormalizeDeviceCoordinates(c0), width, height);
     WindowCoords wc1 = WindowTransformation(NormalizeDeviceCoordinates(c1), width, height);
     WindowCoords wc2 = WindowTransformation(NormalizeDeviceCoordinates(c2), width, height);
     
+    BoundingBox box;
     CalculateBoundingBox(wc0, wc1, wc2, &box, width, height);
 
     float det = ((wc1.y-wc2.y)*(wc0.x-wc2.x)+(wc2.x-wc1.x)*(wc0.y-wc2.y));
@@ -34,7 +56,7 @@ void ScanConversion(ClipCoords c0, ClipCoords c1, ClipCoords c2, float *depthBuf
                 1 - lambda1 - lambda2
             );
 
-            if (!(lambda1 >= 0 && lambda2 >= 0 && lambda3 >= 0)) {
+            if (!(lambda1 >= -0.005 && lambda2 >= -0.005 && lambda3 >= -0.005)) {
                 continue;
             }
 
@@ -48,21 +70,19 @@ void ScanConversion(ClipCoords c0, ClipCoords c1, ClipCoords c2, float *depthBuf
             };
             Normalize(&normal);
 
-            uint32_t light = (uint32_t)(DotProduct(normal, lightDirection) * 127 + 128);
+            float lightValue = 0.5 + 0.5 * (DotProduct(normal, lightDirection) / 2 + 0.5);
+            uint32_t light = (uint32_t) (lightValue * 255);
             uint32_t pixel = (light << 16) | (light << 8) | light;
 
+            if (depth > depthBuffer[x + (y) * width]) continue;
+
             if (wireframeMode == 0) {
-                if (depth < depthBuffer[x + (y * width)]) {
-                    AddToBuffer(buf, x, y, pixel);
-                    depthBuffer[x + (y * width)] = depth;
-                }
+                AddToBuffer(buf, x, y, pixel);
+            } else if (lambda1 <= 0.05 || lambda2 <= 0.05 || lambda3 <= 0.05) {
+                AddToBuffer(buf, x, y, pixel);
             }
-            else if (lambda1 <= 0.05 || lambda2 <= 0.05 || lambda3 <= 0.05) {
-                if (depth < depthBuffer[x + (y * width)]) {
-                    AddToBuffer(buf, x, y, pixel);
-                    depthBuffer[x + (y * width)] = depth;
-                }
-            }
+
+            depthBuffer[x + (y * width)] = depth;
         }
     }
 }
@@ -75,7 +95,7 @@ void ClearDepthBuffer(float *buffer, int width, int height) {
     }
 }
 
-void RenderTriangle(Triangle *triangle, Object *obj, Camera *cam, float *depthBuffer, FrameBuffer *buffer, float perspectiveMatrix[4][4], int wireframeMode, int width, int height) {
+void RenderTriangle(Triangle *triangle, Object *obj, Camera *cam, float *depthBuffer, FrameBuffer *buffer, int wireframeMode, int width, int height) {
     ClipCoords cc[3];
 
     cc[0] = ClipSpaceTransform(ViewTransfrom(LocalTransform(triangle->vertices[0], *obj), *cam), perspectiveMatrix);
@@ -93,8 +113,6 @@ void RenderTriangle(Triangle *triangle, Object *obj, Camera *cam, float *depthBu
 
     int clipCount = clip0 + clip1 + clip2;
     int idxClip, idxNonClip, idxNext, idxPrev;
-
-    float lightValue = 0.1;
 
     switch (clipCount) {
         case 0:

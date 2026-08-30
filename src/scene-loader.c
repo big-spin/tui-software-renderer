@@ -35,18 +35,16 @@ int LoadSceneFromFile(char *path, Object **scene, NameFunctionPair *funcs, int f
             (*scene)[n].hasFunction = 0;
 
             (*scene)[n].mesh = malloc(1000 * sizeof(Triangle));
+            
             int triCount = LoadMeshFromFile(fileToLoad, (*scene)[n].mesh);
-            if (triCount == 0) {
-                return 0;
-            }
+            if (triCount == 0) return 0;
 
             (*scene)[n].triangleCount = triCount;
 
             (*scene)[n].scale = (Vec3){1,1,1};
 
             n++;
-        }
-        else if (strcmp(split, "MOVE") == 0) {
+        } else if (strcmp(split, "MOVE") == 0) {
             int idx;
             float x, y, z;
 
@@ -61,8 +59,7 @@ int LoadSceneFromFile(char *path, Object **scene, NameFunctionPair *funcs, int f
             }
 
             (*scene)[idx].position = (Vec3){x, y, z};
-        }
-        else if (strcmp(split, "ROTATE") == 0) {
+        } else if (strcmp(split, "ROTATE") == 0) {
             int idx;
             float x, y, z;
 
@@ -77,8 +74,7 @@ int LoadSceneFromFile(char *path, Object **scene, NameFunctionPair *funcs, int f
             }
 
             (*scene)[idx].rotation = (Vec3){x, y, z};
-        }
-        else if (strcmp(split, "SCALE") == 0) {
+        } else if (strcmp(split, "SCALE") == 0) {
             int idx;
             float x, y, z;
 
@@ -93,8 +89,7 @@ int LoadSceneFromFile(char *path, Object **scene, NameFunctionPair *funcs, int f
             }
 
             (*scene)[idx].scale = (Vec3){x, y, z};
-        }
-        else if (strcmp(split, "ASSIGN") == 0) {
+        } else if (strcmp(split, "ASSIGN") == 0) {
             int idx;
             char name[50];
 
@@ -110,12 +105,11 @@ int LoadSceneFromFile(char *path, Object **scene, NameFunctionPair *funcs, int f
 
             int found = 0;
             for (int i = 0; i < funcCount; i++) {
-                if (strcmp(name, funcs[i].name) == 0) {
-                    (*scene)[idx].func = funcs[i].func;
-                    (*scene)[idx].hasFunction = 1;
-                    found = 1;
-                    break;
-                }
+                if (strcmp(name, funcs[i].name) == 1) continue;
+
+                (*scene)[idx].func = funcs[i].func;
+                (*scene)[idx].hasFunction = 1;
+                found = 1;
             }
 
             if (found == 0) {

@@ -52,10 +52,9 @@ Vertex RotateVertexAroundAxis(Vertex vx, float angle, RotationAxis axis) {
 
 // Rotate a vertex around all axis at once.
 Vertex RotateVertex(Vertex vx, float x, float y, float z) {
-    // return RotateVertexAroundAxis(RotateVertexAroundAxis(RotateVertexAroundAxis(vx, y, Y_AXIS), z, Z_AXIS), x, X_AXIS);
     mat3 rotation = Matrix3Multiplication(
-        Matrix3Multiplication(RotationZ(z), RotationY(y)),
-        RotationX(x)
+        Matrix3Multiplication(RotationZ(x), RotationY(y)),
+        RotationX(z)
     );
 
     Vertex out = vx;

@@ -1,7 +1,6 @@
 #include "../include/x11.h"
-#include "../include/math-utils.h"
-#include <X11/X.h>
-#include <X11/Xlib.h>
+#include "../include/render.h"
+#include "../include/keyboard.h"
 
 static Display *display;
 static int screen;
@@ -9,6 +8,11 @@ static Window window;
 static GC gc;
 static XImage *img;
 static XEvent event;
+static FrameBuffer *bufCopy;
+
+static float sens = 0.005;
+
+static int pointerCaptured = 0;
 
 void OpenX11Window() {
     display = XOpenDisplay(NULL);
@@ -42,6 +46,7 @@ void OpenX11Window() {
     XConfigureWindow(display, window, CWWidth | CWHeight | CWStackMode, &changes);
 
     XGrabPointer(display, window, 1, PointerMotionMask, GrabModeAsync, GrabModeAsync, None, None, CurrentTime);
+    pointerCaptured = 1;
 }
 
 void CloseX11Window() {
@@ -72,6 +77,8 @@ void PresentBufferX11(FrameBuffer *buf) {
 }
 
 int X11Input(Camera *cam, Event *ev, int *width, int *height) {
+    ResetKeyboard(&ev->keys);
+
     int resized = 0;
     while (XPending(display)) {
         XNextEvent(display, &event);
@@ -80,67 +87,68 @@ int X11Input(Camera *cam, Event *ev, int *width, int *height) {
             *height = event.xconfigure.height;
 
             resized = 1;
-        }
-        else if (event.type == MotionNotify) {
+        } else if (pointerCaptured == 1 && event.type == MotionNotify) {
             int dx = event.xmotion.x - (*width / 2);
             int dy = event.xmotion.y - (*height / 2);
 
             if (dx != 0 || dy != 0) {
-                cam->yaw -= dx * cam->rotationSpeed;
-                cam->pitch -= dy * cam->rotationSpeed;
+                cam->yaw -= dx * sens;
+                cam->pitch -= dy * sens;
             }
-        }
-        else if (event.type == KeyPress) {
+        } else if (event.type == KeyPress) {
             KeySym key = XLookupKeysym(&event.xkey, 0);
-
-            Vec3 forward = RotateVec3AroundAxis((Vec3){0.0, 0.0, -cam->speed}, cam->yaw, Y_AXIS);
-            Vec3 backward = RotateVec3AroundAxis((Vec3){0.0, 0.0, cam->speed}, cam->yaw, Y_AXIS);
-            Vec3 right = RotateVec3AroundAxis((Vec3){cam->speed, 0.0, 0.0}, cam->yaw, Y_AXIS);
-            Vec3 left = RotateVec3AroundAxis((Vec3){-cam->speed, 0.0, 0.0}, cam->yaw, Y_AXIS);
 
             switch (key) {
                 case XK_q:
                     ev->quit = 1;
                     break;
                 case XK_w:
-                    cam->pos = AddVec3(cam->pos, forward);
+                    ev->keys.w = 1;
                     break;
                 case XK_a:
-                    cam->pos = AddVec3(cam->pos, left);
+                    ev->keys.a = 1;
                     break;
                 case XK_s:
-                    cam->pos = AddVec3(cam->pos, backward);
+                    ev->keys.s = 1;
                     break;
                 case XK_d:
-                    cam->pos = AddVec3(cam->pos, right);
+                    ev->keys.d = 1;
                     break;
                 case XK_r:
-                    cam->pos.y += cam->speed;
+                    ev->keys.r = 1;
                     break;
                 case XK_f:
-                    cam->pos.y -= cam->speed;
+                    ev->keys.f = 1;
                     break;
                 case XK_i:
-                    cam->pitch += cam->rotationSpeed;
+                    ev->keys.i = 1;
                     break;
                 case XK_k:
-                    cam->pitch -= cam->rotationSpeed;
+                    ev->keys.k = 1;
                     break;
                 case XK_j:
-                    cam->yaw += cam->rotationSpeed;
+                    ev->keys.j = 1;
                     break;
                 case XK_l:
-                    cam->yaw -= cam->rotationSpeed;
+                    ev->keys.l = 1;
                     break;
                 case XK_v:
-                    if (ev->wireframeMode == 0) ev->wireframeMode = 1;
-                    else ev->wireframeMode = 0;
+                    ev->keys.v = 1;
                     break;
+                case XK_Escape:
+                    if (pointerCaptured == 0) {
+                        XGrabPointer(display, window, 1, PointerMotionMask, GrabModeAsync, GrabModeAsync, None, None, CurrentTime);
+                        pointerCaptured = 1;
+                    } else {
+                        XUngrabPointer(display, CurrentTime);
+                        pointerCaptured = 0;
+                    }
             }
         }
     }
 
-    XWarpPointer(display, None, window, 0, 0, 0, 0, *width / 2, *height / 2);
+    if (pointerCaptured == 1) XWarpPointer(display, None, window, 0, 0, 0, 0, *width / 2, *height / 2);
+    if (resized == 1) UpdatePerspectiveMatrix(*width, *height);
 
     return resized;
 }

@@ -10,7 +10,7 @@ A software renderer/rasterizer made in C with no dependencies outside of libc
 
 Clone the repo
 
-`git clone https://github.com/PGamer2951/tui-software-renderer.git`
+`git clone https://github.com/big-spin/tui-software-renderer.git`
 
 Change into the repo's directory
 
@@ -30,7 +30,7 @@ If instead of rendering to the terminal, you'd prefer an x11 window, simply add 
 
 ## Scene files
 
-Scene files (ending in .scene) can be loaded by the renderer and tell it which objects to load, where to place them and if they have any rotation.
+Scene files (ending in .scene) can be loaded by the renderer and tell it which objects to load and how and where to place them.
 
 There are five available commands in scene files:
 
