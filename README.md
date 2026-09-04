@@ -2,6 +2,8 @@
 
 A software renderer/rasterizer made in C with no dependencies outside of libc
 
+https://github.com/user-attachments/assets/1756b171-9d97-4774-8c93-0c51df7b8c8a
+
 ## Building it locally
 ### (For linux)
 ### Pre-requisites
