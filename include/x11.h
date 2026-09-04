@@ -1,5 +1,4 @@
-#ifndef X_11_H
-#define X_11_H
+#pragma once
 
 #include "custom-types.h"
 
@@ -16,5 +15,3 @@ void SetupXImage(FrameBuffer *buf, int width, int height);
 void PresentBufferX11(FrameBuffer *buf);
 
 int X11Input(Camera *cam, Event *ev, int *width, int *height);
-
-#endif

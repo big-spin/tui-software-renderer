@@ -7,8 +7,6 @@
 #include "../include/x11.h" 
 #endif
 
-struct termios original;
-
 int width, height;
 
 int main(int argc, char *argv[]) {
@@ -17,30 +15,26 @@ int main(int argc, char *argv[]) {
     if (argc < 2) {
         puts("No scene file provided\n");
         return 0;
-    } else if (argc == 3 && strcmp(argv[2], "X11") == 0) backend = X11;
-
-    Object *scene = NULL;
-    int sceneSize = LoadSceneFromFile(argv[1], &scene, NULL, 0);
-
-    if (sceneSize == 0) return 1;
+    } else if (argc == 3 && strcmp(argv[2], "X11") == 0) {
+	backend = X11;
+    }
 
     if (backend == Term) {
-        tcgetattr(STDIN_FILENO, &original);
-        InitTerm(&original);
+        InitTerm();
     }
     #ifndef NO_X11
     else OpenX11Window();
     #endif
 
-    width = backend == Term ? TermWidth() : 640;
-    height = backend == Term ? TermHeight() : 480;
+    width = (backend == Term ? TermWidth() : 640);
+    height = (backend == Term ? TermHeight() : 480);
 
 
-    FrameBuffer buffer;
-
-    buffer.width = width;
-    buffer.height = height;
-    buffer.data = malloc(buffer.width * buffer.height * sizeof(uint32_t));
+    FrameBuffer buffer = {
+	malloc(width * height * sizeof(uint32_t)),
+        width,
+	height,
+    };
 
     float *depthBuffer = malloc(width * height * sizeof(float));
 
@@ -48,16 +42,21 @@ int main(int argc, char *argv[]) {
     if (backend == X11) SetupXImage(&buffer, 640, 480);
     #endif
 
-    // Setup camera
+    Object *scene = NULL;
+
+    int sceneSize = LoadSceneFromFile(argv[1], &scene, NULL, 0);
+    if (sceneSize == 0) return 1;
+
     Camera cam = { 
-        { 0.0, 0.0, 0.0 },
-        0.0,
-        0.0,
-        5.0,
-        20.0,
+        .pos={ 0.0, 0.0, 0.0 },
+        .pitch=0.0,
+        .yaw=0.0,
+        .speed=80.0,
+        .rotationSpeed=250.0,
     };
 
     Event ev;
+
     ev.quit = 0;
     ev.wireframeMode = 0;
 
@@ -66,15 +65,11 @@ int main(int argc, char *argv[]) {
 
     clock_gettime(CLOCK_MONOTONIC, &deltaTimeClock);
 
-    // Main loop
     while (ev.quit != 1) {
-        // Clear frame and depth buffers
         ClearBuffer(&buffer);
         ClearDepthBuffer(depthBuffer, width, height);
 
-        // Main rendering
         for (int i = 0; i < sceneSize; i++) {
-            // Run any custom object functions
             if (scene[i].hasFunction == 1) {
                 scene[i].func(&scene[i], &ev);
             }
@@ -84,22 +79,22 @@ int main(int argc, char *argv[]) {
             }
         }
 
-        int result = 0;
+        int inputResult = 0;
 
         if (backend == Term) {
             PresentBuffer(&buffer);
-            result = TermInput(&cam, &ev, &width, &height);
+            inputResult = TermInput(&cam, &ev, &width, &height);
         }
         #ifndef NO_X11
         else {
             PresentBufferX11(&buffer);
-            result = X11Input(&cam, &ev, &width, &height);
+            inputResult = X11Input(&cam, &ev, &width, &height);
         }
         #endif
 
-        if (result == -1) return 1;
+        if (inputResult == -1) return 1;
 
-        if (result == 1) {
+        if (inputResult == 1) {
             depthBuffer = realloc(depthBuffer, width * height * sizeof(float));
 
             buffer.data = realloc(buffer.data, width * height * sizeof(uint32_t));
@@ -129,10 +124,7 @@ int main(int argc, char *argv[]) {
         if (ev.keys.k == 1) cam.pitch -= cam.rotationSpeed * deltaTime;
         if (ev.keys.l == 1) cam.yaw -= cam.rotationSpeed * deltaTime;
 
-        if (ev.keys.v == 1) {
-            if (ev.wireframeMode == 1) ev.wireframeMode = 0;
-            else ev.wireframeMode = 1;
-        }
+        if (ev.keys.v == 1) ev.wireframeMode = (ev.wireframeMode == 0 ? 1 : 0);
 
         ev.frameNumber++;
 
@@ -142,15 +134,10 @@ int main(int argc, char *argv[]) {
         deltaTime = (double)(now.tv_sec - deltaTimeClock.tv_sec) + (double)(now.tv_nsec - deltaTimeClock.tv_nsec) / 1000000000;
 
         deltaTimeClock = now;
-
-        #ifndef NO_X11
-        if (backend == X11) printf("%fms / %ffps (frame: %d)\n", deltaTime*1000, 1/deltaTime, ev.frameNumber);
-        #endif
     }
 
-    // Final cleanup
     if (backend == Term) {
-        ShutdownTerm(&original);
+        ShutdownTerm();
         free(buffer.data);
     }
     #ifndef NO_X11

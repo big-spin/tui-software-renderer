@@ -1,5 +1,4 @@
-#ifndef RENDER_H
-#define RENDER_H
+#pragma once
 
 #include "custom-types.h"
 
@@ -10,5 +9,3 @@ void ClearDepthBuffer(float *buffer, int width, int height);
 void RenderTriangle(Triangle *triangle, Object *obj, Camera *cam, float *depthBuffer, FrameBuffer *buffer, int wireframeMode, int width, int height);
 
 void UpdatePerspectiveMatrix(int width, int height);
-
-#endif

@@ -1,19 +1,14 @@
-#ifndef TERM_H
-#define TERM_H
+#pragma once
 
 #include "custom-types.h"
 
-int TermWidth();
+void InitTerm();
+
+void ShutdownTerm();
 
 int TermHeight();
 
-void EnableRawMode(struct termios *original);
-
-void DisableRawMode(struct termios *original);
-
-void InitTerm(struct termios *original);
-
-void ShutdownTerm(struct termios *original);
+int TermWidth();
 
 void AddToBuffer(FrameBuffer *buf, int x, int y, uint32_t data);
 
@@ -22,5 +17,3 @@ void ClearBuffer(FrameBuffer *buf);
 void PresentBuffer(FrameBuffer *buf);
 
 int TermInput(Camera *cam, Event *ev, int *width, int *height);
-
-#endif

@@ -1,5 +1,4 @@
-#ifndef TRANSFORMATIONS_H
-#define TRANSFORMATIONS_H
+#pragma once
 
 #include "custom-types.h"
 
@@ -20,5 +19,3 @@ ClipCoords ClipSpaceTransform(Vertex vx, float perspectiveMatrix[4][4]);
 NdCoords NormalizeDeviceCoordinates(ClipCoords cc);
 
 WindowCoords WindowTransformation(NdCoords nc, int width, int height);
-
-#endif

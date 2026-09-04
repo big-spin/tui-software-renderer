@@ -53,7 +53,20 @@ int LoadMeshFromFile(char *path, Triangle *mesh) {
                 p2, n2, t2,
                 p3, n3, t3,
                 p4, n4, t4;
+	    if (strstr(data, "/") == NULL) {
+		int out = sscanf(data, " f %d %d %d", &p1, &p2, &p3);
+		if (out != 3) {
+		    return 0;
+		}
 
+		mesh[triangleCount].vertices[0].pos = positions[p1 - 1];
+		mesh[triangleCount].vertices[1].pos = positions[p2 - 1];
+		mesh[triangleCount].vertices[2].pos = positions[p3 - 1];
+
+		triangleCount++;
+
+		continue;
+	    }
             if (strstr(data, "//")) {
                 int out = sscanf(data, " f %d//%d %d//%d %d//%d %d//%d", &p1, &n1, &p2, &n2, &p3, &n3, &p4, &n4);
 

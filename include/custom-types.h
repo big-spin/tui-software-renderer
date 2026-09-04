@@ -1,5 +1,4 @@
-#ifndef CUSTOM_TYPES_H
-#define CUSTOM_TYPES_H
+#pragma once
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -130,11 +129,3 @@ typedef struct {
 typedef struct {
     float data[4][4];
 } mat4;
-
-typedef enum {
-    Info,
-    Warning,
-    Error,
-} LogType;
-
-#endif

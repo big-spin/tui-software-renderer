@@ -11,16 +11,22 @@ DEBUGFLAGS = -g -fsanitize=address -fno-omit-frame-pointer
 SRC = src/math-utils.c src/keyboard.c src/term.c src/x11.c src/obj-loader.c src/scene-loader.c src/transformations.c src/render.c src/main.c
 SRCNOX11 = src/math-utils.c src/keyboard.c src/term.c src/obj-loader.c src/scene-loader.c src/transformations.c src/render.c src/main.c
 
-.PHONY: build debug clean no-x11
+.PHONY: build debug clean no-x11 install uninstall
 
 build: $(SRC)
-	$(CC) $(SRC) -o $(TARGET) $(CFLAGS) $(LIBS) $(X11LIB)
+	$(CC) $(CFLAGS) $(SRC) -o $(TARGET) $(LIBS) $(X11LIB)
 
 no-x11: $(SRCNOX11)
-	$(CC) $(SRCNOX11) -o $(TARGET) $(CFLAGS) $(LIBS) -DNO_X11
+	$(CC) $(CFLAGS) -DNO_X11 $(SRCNOX11) -o $(TARGET) $(LIBS)
 
 debug: $(SRC)
-	$(CC) $(SRC) -o $(TARGET) $(CFLAGS) $(LIBS) $(X11LIB) $(DEBUGFLAGS)
+	$(CC) $(CFLAGS) $(DEBUGFLAGS) $(SRC) -o $(TARGET) $(LIBS) $(X11LIB)
 
 clean:
 	rm -f $(TARGET)
+
+install: $(TARGET)
+	sudo cp $(TARGET) /usr/bin/$(TARGET)
+
+uninstall:
+	sudo rm -f /usr/bin/$(TARGET)

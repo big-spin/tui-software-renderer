@@ -2,15 +2,17 @@
 #include "../include/render.h"
 #include "../include/keyboard.h"
 
-void EnableRawMode(struct termios *original) {
-    struct termios term = *original;
+static struct termios terminal;
+
+void EnableRawMode() {
+    struct termios term = terminal;
 
     term.c_lflag &= ~(ECHO | ICANON | ISIG);
     tcsetattr(STDIN_FILENO, TCSANOW, &term);
 }
 
-void DisableRawMode(struct termios *original) {
-    tcsetattr(STDIN_FILENO, TCSANOW, original);
+void DisableRawMode() {
+    tcsetattr(STDIN_FILENO, TCSANOW, &terminal);
 }
 
 int TermWidth() {
@@ -27,8 +29,9 @@ int TermHeight() {
     return w.ws_row;
 }
 
-void InitTerm(struct termios *original) {
-    EnableRawMode(original);
+void InitTerm() {
+    tcgetattr(STDIN_FILENO, &terminal);
+    EnableRawMode();
     
     write(STDOUT_FILENO, "\x1B[H", 3);
     write(STDOUT_FILENO, "\x1B[2J", 4);
@@ -37,8 +40,8 @@ void InitTerm(struct termios *original) {
     UpdatePerspectiveMatrix(TermWidth(), TermHeight());
 }
 
-void ShutdownTerm(struct termios *original) {
-    DisableRawMode(original);
+void ShutdownTerm() {
+    DisableRawMode();
 
     write(STDOUT_FILENO, "\x1B[2J", 4);
     write(STDOUT_FILENO, "\x1B[?25h", 6);

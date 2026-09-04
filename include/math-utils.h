@@ -1,5 +1,4 @@
-#ifndef MATH_UTILS_H
-#define MATH_UTILS_H
+#pragma once
 
 #include "custom-types.h"
 
@@ -34,5 +33,3 @@ void CalculateBoundingBox(WindowCoords wc0, WindowCoords wc1, WindowCoords wc2, 
 float DotProduct(Vec3 vec1, Vec3 vec2);
 
 void Normalize(Vec3 *vec);
-
-#endif

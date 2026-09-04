@@ -1,8 +1,5 @@
-#ifndef KEYBOARD_H
-#define KEYBOARD_H
+#pragma once
 
 #include "custom-types.h"
 
 int ResetKeyboard(Keyboard *keys);
-
-#endif
